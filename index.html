@@ -1,0 +1,4221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Expedientes Docentes - MINED Rancho Grande</title>
+
+<style>
+:root{
+--azul:#1557a6;
+--azul2:#0878ff;
+--azul3:#123c78;
+--fondo:#eef4fb;
+--blanco:#fff;
+--texto:#17324d;
+--gris:#6b7b8d;
+--borde:#d9e2ec;
+--verde:#198754;
+--rojo:#dc3545;
+--amarillo:#f59f00;
+}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Segoe UI,Arial,sans-serif;
+background:var(--fondo);
+color:var(--texto);
+}
+
+button,
+input,
+select,
+textarea{
+font:inherit;
+}
+
+button{
+border:0;
+border-radius:9px;
+padding:10px 14px;
+font-weight:700;
+cursor:pointer;
+background:var(--azul2);
+color:#fff;
+}
+
+button:hover{
+opacity:.92;
+}
+
+.btn-verde{
+background:var(--verde);
+}
+
+.btn-rojo{
+background:var(--rojo);
+}
+
+.btn-gris{
+background:#64748b;
+}
+
+.btn-claro{
+background:#e8f1fb;
+color:var(--azul3);
+}
+
+.oculto{
+display:none!important;
+}
+
+/* LOGIN */
+
+#login{
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+background:linear-gradient(135deg,#123c78,#0878ff);
+}
+
+.login-box{
+width:430px;
+max-width:100%;
+background:white;
+padding:38px;
+border-radius:24px;
+box-shadow:0 25px 70px rgba(0,0,0,.30);
+}
+
+.login-logo{
+text-align:center;
+font-size:60px;
+}
+
+.login-box h1{
+text-align:center;
+margin:5px 0;
+color:var(--azul3);
+}
+
+.login-sub{
+text-align:center;
+color:var(--gris);
+margin-bottom:25px;
+}
+
+.login-box label{
+display:block;
+font-weight:bold;
+margin-top:10px;
+}
+
+.login-box input{
+width:100%;
+padding:14px;
+border:1px solid var(--borde);
+border-radius:10px;
+margin-top:5px;
+}
+
+.login-btn{
+width:100%;
+margin-top:18px;
+padding:14px;
+}
+
+.login-error{
+background:#ffe7e7;
+color:#a51d1d;
+padding:10px;
+border-radius:8px;
+margin-bottom:10px;
+}
+
+/* HEADER */
+
+header{
+background:linear-gradient(135deg,#123c78,#0878ff);
+color:#fff;
+padding:17px 4%;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:15px;
+}
+
+.header-title{
+font-size:24px;
+font-weight:800;
+}
+
+.header-sub{
+font-size:13px;
+opacity:.85;
+}
+
+.usuario-header{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+/* CONTENEDOR */
+
+.contenedor{
+width:94%;
+max-width:1400px;
+margin:22px auto;
+}
+
+/* ESTADISTICAS */
+
+.estadisticas{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin-bottom:18px;
+}
+
+.estadistica{
+background:white;
+border-radius:16px;
+padding:20px;
+box-shadow:0 4px 20px rgba(23,50,77,.08);
+}
+
+.estadistica-icono{
+font-size:28px;
+}
+
+.estadistica-numero{
+display:block;
+font-size:30px;
+font-weight:800;
+color:var(--azul3);
+}
+
+.estadistica-texto{
+color:var(--gris);
+}
+
+/* MENU */
+
+.menu{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-bottom:18px;
+}
+
+.menu button{
+background:var(--azul3);
+}
+
+/* CARDS */
+
+.card{
+background:white;
+border-radius:16px;
+padding:22px;
+box-shadow:0 4px 20px rgba(23,50,77,.08);
+margin-bottom:18px;
+}
+
+.card h2{
+margin-top:0;
+color:var(--azul3);
+}
+
+/* SECCIONES */
+
+.seccion{
+display:none;
+}
+
+.seccion.activa{
+display:block;
+}
+
+/* BUSCADOR */
+
+.buscador{
+display:flex;
+gap:10px;
+}
+
+.buscador input{
+flex:1;
+padding:13px;
+border:1px solid var(--borde);
+border-radius:10px;
+}
+
+/* TABLA */
+
+.tabla-contenedor{
+overflow-x:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,
+td{
+padding:11px;
+border-bottom:1px solid #e6edf4;
+text-align:left;
+}
+
+th{
+background:#f4f7fa;
+color:var(--azul3);
+}
+
+.badge{
+display:inline-block;
+padding:5px 10px;
+border-radius:20px;
+background:#e8f7ef;
+color:#14733f;
+font-size:12px;
+font-weight:bold;
+}
+
+/* MODAL */
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.70);
+display:none;
+justify-content:center;
+align-items:center;
+padding:15px;
+z-index:100;
+}
+
+.modal.activo{
+display:flex;
+}
+
+.modal-contenido{
+width:1150px;
+max-width:100%;
+max-height:95vh;
+overflow:auto;
+background:white;
+border-radius:20px;
+padding:22px;
+}
+
+.modal-cabecera{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:15px;
+}
+
+/* PERFIL */
+
+.perfil{
+display:flex;
+gap:22px;
+align-items:center;
+margin:18px 0;
+padding:18px;
+border-radius:15px;
+background:#f5f8fc;
+}
+
+.foto-perfil{
+width:145px;
+height:165px;
+border-radius:16px;
+border:4px solid var(--azul2);
+background:#e9eff6;
+display:flex;
+justify-content:center;
+align-items:center;
+overflow:hidden;
+font-size:50px;
+flex-shrink:0;
+}
+
+.foto-perfil img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+/* DATOS RAPIDOS */
+
+.datos-rapidos{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin-top:15px;
+}
+
+.dato-rapido{
+background:white;
+border:1px solid var(--borde);
+border-radius:10px;
+padding:10px;
+}
+
+.dato-rapido small{
+display:block;
+color:var(--gris);
+}
+
+/* TABS */
+
+.tabs{
+display:flex;
+flex-wrap:wrap;
+gap:7px;
+margin:15px 0;
+}
+
+.tabs button{
+background:#64748b;
+}
+
+.tabs button.activa{
+background:var(--azul2);
+}
+
+.tab{
+display:none;
+}
+
+.tab.activa{
+display:block;
+}
+
+/* FORMULARIOS */
+
+.grid2{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:14px;
+}
+
+.campo label{
+display:block;
+font-weight:bold;
+margin-bottom:5px;
+}
+
+.campo input,
+.campo select,
+.campo textarea{
+width:100%;
+padding:11px;
+border:1px solid var(--borde);
+border-radius:9px;
+}
+
+.campo textarea{
+min-height:120px;
+resize:vertical;
+}
+
+.completo{
+grid-column:1/-1;
+}
+
+/* DOCUMENTOS */
+
+.documento{
+border:1px solid var(--borde);
+border-radius:12px;
+padding:14px;
+margin:10px 0;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:15px;
+}
+
+.documento-info{
+flex:1;
+}
+
+.documento-botones{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+}
+
+.miniatura{
+max-width:190px;
+max-height:150px;
+border-radius:9px;
+border:1px solid var(--borde);
+display:block;
+margin-top:8px;
+}
+
+.aviso{
+background:#edf5ff;
+border-radius:10px;
+padding:13px;
+margin:10px 0;
+}
+
+.vacio{
+text-align:center;
+padding:25px;
+color:var(--gris);
+}
+
+/* CAMARA */
+
+#modalCamara{
+z-index:200;
+}
+
+.camara{
+width:700px;
+max-width:100%;
+background:#111;
+color:white;
+padding:20px;
+border-radius:18px;
+text-align:center;
+}
+
+.camara video{
+width:100%;
+max-height:65vh;
+background:#000;
+border-radius:12px;
+object-fit:contain;
+}
+
+#canvas{
+display:none;
+}
+
+.camara-controles{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-top:12px;
+}
+
+/* HISTORIAL */
+
+.historial-item{
+padding:13px;
+border:1px solid var(--borde);
+border-radius:10px;
+margin:8px 0;
+}
+
+.historial-item strong{
+color:var(--azul3);
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+.estadisticas{
+grid-template-columns:1fr 1fr;
+}
+
+.grid2{
+grid-template-columns:1fr;
+}
+
+.completo{
+grid-column:auto;
+}
+
+.datos-rapidos{
+grid-template-columns:1fr 1fr;
+}
+
+}
+
+@media(max-width:600px){
+
+header{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.estadisticas{
+grid-template-columns:1fr;
+}
+
+.buscador{
+flex-direction:column;
+}
+
+.perfil{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.documento{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.datos-rapidos{
+grid-template-columns:1fr;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+
+<!-- ======================================================
+     LOGIN
+====================================================== -->
+
+<div id="login">
+
+<div class="login-box">
+
+<div class="login-logo">
+📁
+</div>
+
+<h1>
+Expedientes Docentes
+</h1>
+
+<div class="login-sub">
+MINED · Rancho Grande<br><small style="font-size:11px;">Sistema Firebase NER 7 · Diagnóstico de acceso</small>
+</div>
+
+<div id="mensajeLogin"></div>
+
+<label>
+Usuario
+</label>
+
+<input
+id="usuario"
+type="text"
+value="ELIAS"
+autocomplete="username"
+placeholder="Ingrese usuario">
+
+<label>
+Contraseña
+</label>
+
+<input
+id="password"
+type="password"
+placeholder="Ingrese contraseña"
+autocomplete="current-password">
+
+<button
+class="login-btn"
+onclick="iniciarSesion()">
+
+🔐 INICIAR SESIÓN
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     SISTEMA
+====================================================== -->
+
+<div id="sistema" class="oculto">
+
+<header>
+
+<div>
+
+<div class="header-title">
+📁 EXPEDIENTES DOCENTES
+</div>
+
+<div class="header-sub">
+MINED · RANCHO GRANDE
+</div>
+
+</div>
+
+<div class="usuario-header">
+
+👑
+
+<strong>
+ELIAS · ADMINISTRADOR
+</strong>
+
+<button
+class="btn-gris"
+onclick="cerrarSesion()">
+
+SALIR
+
+</button>
+
+</div>
+
+</header>
+
+
+<div class="contenedor">
+
+
+<!-- ESTADISTICAS -->
+
+<div class="estadisticas">
+
+<div class="estadistica">
+
+<div class="estadistica-icono">
+👨‍🏫
+</div>
+
+<span
+id="totalDocentes"
+class="estadistica-numero">
+
+0
+
+</span>
+
+<span class="estadistica-texto">
+Docentes registrados
+</span>
+
+</div>
+
+
+<div class="estadistica">
+
+<div class="estadistica-icono">
+🟢
+</div>
+
+<span
+id="totalActivos"
+class="estadistica-numero">
+
+0
+
+</span>
+
+<span class="estadistica-texto">
+Docentes activos
+</span>
+
+</div>
+
+
+<div class="estadistica">
+
+<div class="estadistica-icono">
+📄
+</div>
+
+<span
+id="totalCV"
+class="estadistica-numero">
+
+0
+
+</span>
+
+<span class="estadistica-texto">
+Hojas de vida cargadas
+</span>
+
+</div>
+
+
+<div class="estadistica">
+
+<div class="estadistica-icono">
+📸
+</div>
+
+<span
+id="totalFotos"
+class="estadistica-numero">
+
+0
+
+</span>
+
+<span class="estadistica-texto">
+Fotos registradas
+</span>
+
+</div>
+
+</div>
+
+
+<!-- MENU -->
+
+<div class="menu">
+
+<button onclick="mostrarSeccion('inicio')">
+🏠 INICIO
+</button>
+
+<button onclick="mostrarSeccion('docentes')">
+👨‍🏫 DOCENTES
+</button>
+
+<button onclick="mostrarSeccion('documentos')">
+📄 DOCUMENTOS
+</button>
+
+<button onclick="mostrarSeccion('usuarios')">
+👥 USUARIOS
+</button>
+
+<button onclick="mostrarSeccion('historial')">
+📝 HISTORIAL
+</button>
+
+<button onclick="mostrarSeccion('reportes')">
+📊 REPORTES
+</button>
+
+</div>
+
+
+<!-- ======================================================
+     INICIO
+====================================================== -->
+
+<div
+id="inicio"
+class="seccion activa">
+
+<div class="card">
+
+<h2>
+🏠 Centro de Control
+</h2>
+
+<p>
+Bienvenido al sistema privado de expedientes docentes.
+</p>
+
+<div class="aviso">
+
+<strong>
+👑 Administrador principal:
+</strong>
+
+ELIAS
+
+<br><br>
+
+El administrador tiene acceso a todos los expedientes.
+
+<br><br>
+
+<strong>
+Importante:
+</strong>
+
+La información principal del expediente está sincronizada.
+Cuando un docente modifica un dato en su Hoja de Vida,
+el dato se actualiza automáticamente en el encabezado,
+la lista y las búsquedas.
+
+</div>
+
+<button
+class="btn-verde"
+onclick="mostrarSeccion('docentes')">
+
+👨‍🏫 VER DOCENTES
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     DOCENTES
+====================================================== -->
+
+<div
+id="docentes"
+class="seccion">
+
+<div class="card">
+
+<h2>
+👨‍🏫 Docentes
+</h2>
+
+<div class="buscador">
+
+<input
+id="buscarDocente"
+oninput="mostrarDocentes()"
+placeholder="🔎 Buscar nombre, cédula, centro, modalidad o especialidad">
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="tabla-contenedor">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+Docente
+</th>
+
+<th>
+Centro educativo
+</th>
+
+<th>
+Modalidad
+</th>
+
+<th>
+Especialidad
+</th>
+
+<th>
+Estado
+</th>
+
+<th>
+Acción
+</th>
+
+</tr>
+
+</thead>
+
+<tbody
+id="tablaDocentes">
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     DOCUMENTOS
+====================================================== -->
+
+<div
+id="documentos"
+class="seccion">
+
+<div class="card">
+
+<h2>
+📄 Gestión de documentos
+</h2>
+
+<div class="aviso">
+
+📷 El docente podrá utilizar la cámara del teléfono
+para fotografiar documentos.
+
+<br><br>
+
+📎 También podrá seleccionar archivos existentes.
+
+<br><br>
+
+🔐 Los expedientes no son públicos.
+
+</div>
+
+<p>
+Los documentos estarán vinculados al expediente correspondiente.
+</p>
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     USUARIOS
+====================================================== -->
+
+<div
+id="usuarios"
+class="seccion">
+
+<div class="card">
+
+<h2>
+👥 Usuarios y niveles de acceso
+</h2>
+
+<div class="aviso">
+
+👑 <strong>ELIAS</strong> =
+Administrador Principal.
+
+<br><br>
+
+Puede consultar todos los expedientes.
+
+</div>
+
+<div class="grid2">
+
+<div class="campo">
+
+<label>
+Usuario
+</label>
+
+<input
+id="nuevoUsuario"
+placeholder="Ejemplo: DOCENTE01">
+
+</div>
+
+
+<div class="campo">
+
+<label>
+Contraseña
+</label>
+
+<input
+id="nuevaPassword"
+type="password">
+
+</div>
+
+
+<div class="campo">
+
+<label>
+Docente
+</label>
+
+<select
+id="usuarioDocente">
+</select>
+
+</div>
+
+
+<div class="campo">
+
+<label>
+Nivel de acceso
+</label>
+
+<select id="nivelAcceso">
+
+<option>
+Docente
+</option>
+
+<option>
+Consulta
+</option>
+
+<option>
+Director
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+<br>
+
+<button
+class="btn-verde"
+onclick="crearUsuario()">
+
++ CREAR USUARIO
+
+</button>
+
+<div
+id="listaUsuarios"
+style="margin-top:20px">
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     HISTORIAL
+====================================================== -->
+
+<div
+id="historial"
+class="seccion">
+
+<div class="card">
+
+<h2>
+📝 Historial de modificaciones
+</h2>
+
+<div
+id="listaHistorial">
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     REPORTES
+====================================================== -->
+
+<div
+id="reportes"
+class="seccion">
+
+<div class="card">
+
+<h2>
+📊 Reportes
+</h2>
+
+<div class="aviso">
+
+Esta sección será utilizada para generar:
+
+<br><br>
+
+📊 Reportes de docentes
+
+<br>
+📄 PDF de expedientes
+
+<br>
+📗 Excel
+
+<br>
+📋 Reportes por centro
+
+<br>
+🎓 Reportes por modalidad
+
+<br>
+⭐ Reportes de evaluaciones
+
+</div>
+
+<button
+onclick="alert('Módulo de exportación Excel/PDF en la siguiente etapa.')">
+
+📊 EXPORTAR
+
+</button>
+
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     MODAL EXPEDIENTE
+====================================================== -->
+
+<div
+id="modalExpediente"
+class="modal">
+
+<div class="modal-contenido">
+
+<div class="modal-cabecera">
+
+<div>
+
+<h2
+id="tituloExpediente">
+</h2>
+
+<div
+id="subtituloExpediente"
+style="color:#6b7b8d">
+</div>
+
+</div>
+
+<button
+class="btn-rojo"
+onclick="cerrarExpediente()">
+
+✕ CERRAR
+
+</button>
+
+</div>
+
+
+<!-- PERFIL -->
+
+<div
+id="perfilExpediente"
+class="perfil">
+
+</div>
+
+
+<!-- TABS -->
+
+<div class="tabs">
+
+<button
+class="activa"
+onclick="abrirTab('hojaVida',this)">
+
+📄 HOJA DE VIDA
+
+</button>
+
+<button
+onclick="abrirTab('titulos',this)">
+
+🎓 TÍTULOS
+
+</button>
+
+<button
+onclick="abrirTab('cedula',this)">
+
+🪪 CÉDULA
+
+</button>
+
+<button
+onclick="abrirTab('evaluaciones',this)">
+
+⭐ EVALUACIONES
+
+</button>
+
+<button
+onclick="abrirTab('record',this)">
+
+📋 RÉCORD
+
+</button>
+
+<button
+onclick="abrirTab('fotos',this)">
+
+📸 FOTOS
+
+</button>
+
+</div>
+
+
+<div
+id="tab-hojaVida"
+class="tab activa">
+</div>
+
+
+<div
+id="tab-titulos"
+class="tab">
+</div>
+
+
+<div
+id="tab-cedula"
+class="tab">
+</div>
+
+
+<div
+id="tab-evaluaciones"
+class="tab">
+</div>
+
+
+<div
+id="tab-record"
+class="tab">
+</div>
+
+
+<div
+id="tab-fotos"
+class="tab">
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ======================================================
+     CAMARA
+====================================================== -->
+
+<div
+id="modalCamara"
+class="modal">
+
+<div class="camara">
+
+<div class="modal-cabecera">
+
+<h2
+id="tituloCamara">
+📷 Cámara
+</h2>
+
+<button
+class="btn-rojo"
+onclick="cerrarCamara()">
+
+✕
+
+</button>
+
+</div>
+
+<video
+id="video"
+autoplay
+playsinline>
+</video>
+
+<canvas
+id="canvas">
+</canvas>
+
+<div class="camara-controles">
+
+<button
+class="btn-verde"
+onclick="tomarFoto()">
+
+📸 TOMAR FOTO
+
+</button>
+
+</div>
+
+<p
+id="mensajeCamara">
+
+Permite el acceso a la cámara cuando el navegador lo solicite.
+
+</p>
+
+</div>
+
+</div>
+
+
+<input
+id="selectorArchivo"
+type="file"
+class="oculto">
+
+
+<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-storage-compat.js"></script>
+<script>
+
+/* ======================================================
+   FIREBASE
+====================================================== */
+
+const firebaseConfig={
+  apiKey:"AIzaSyCv6NK_ECgZAUfwZtIZghkmW6t4l8x-Me8",
+  authDomain:"expedientes-docentes-ner-7.firebaseapp.com",
+  projectId:"expedientes-docentes-ner-7",
+  storageBucket:"expedientes-docentes-ner-7.firebasestorage.app",
+  messagingSenderId:"146658127777",
+  appId:"1:146658127777:web:efdcf76e33b8e77825e0"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db=firebase.firestore();
+const auth=firebase.auth();
+
+let storage=null;
+try{
+  storage=firebase.storage();
+}catch(e){
+  storage=null;
+}
+
+const ADMIN_UID="7KYyprxY59XhsiC2O3su56QDStX2";
+const ADMIN_EMAIL="reusgaleano21@gmail.com";
+const USUARIO_ADMIN="ELIAS";
+
+let sesion={
+  uid:null,
+  email:"",
+  rol:"",
+  docenteId:null,
+  nombre:""
+};
+
+let datos={
+  historial:[]
+};
+
+let docenteActual=null;
+let tipoCamara=null;
+let streamCamara=null;
+
+const MAX_FIRESTORE_FILE_BYTES=700*1024;
+
+
+/* ======================================================
+   ORGANIZACION LABORAL
+====================================================== */
+
+const DOCENTES=[
+
+{
+id:"D001",
+nombre:"Reyna Isabel Garcia Rodriguez",
+cedula:"453-141292-0000M",
+telefono:"78193090",
+inss:"28689506",
+centro:"Primero De Mayo",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1°, 2° y 3° grado"
+},
+
+{
+id:"D002",
+nombre:"Santos Perez Perez",
+cedula:"453-200181-0000N",
+telefono:"88092825",
+inss:"16404119",
+centro:"Primero De Mayo",
+modalidad:"Primaria Multigrado",
+especialidad:"L Y L",
+combinacion:"4°, 5° y 6° grado"
+},
+
+{
+id:"D003",
+nombre:"Julia del Carmen Gutierrez Cruz",
+cedula:"246-130192-0000N",
+telefono:"88853003",
+inss:"30747533",
+centro:"Benjamin Zeledon",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"5° y 6° grado"
+},
+
+{
+id:"D004",
+nombre:"Hidalmin José Aráuz Talavera",
+cedula:"453-140682-0000C",
+telefono:"77217560",
+inss:"17457240",
+centro:"Monseñor Carlos Santi",
+modalidad:"Primaria Multigrado / SADC",
+especialidad:"CCSS",
+combinacion:"5° y 6° grado / Secundaria"
+},
+
+{
+id:"D005",
+nombre:"Jeiling Sevilla Aviles",
+cedula:"453-180805-1002G",
+telefono:"83941964",
+inss:"44390183",
+centro:"Chepita Cerna",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1°, 2° y 3° grado"
+},
+
+{
+id:"D006",
+nombre:"Cristina de Jesus Hernandez Flores",
+cedula:"441-221179-0011W",
+telefono:"76762099",
+inss:"42834692",
+centro:"Chepita Cerna",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"4°, 5° y 6° grado"
+},
+
+{
+id:"D007",
+nombre:"Mariluz Hernández Lopez",
+cedula:"453-131292-0000K",
+telefono:"87220610",
+inss:"44390145",
+centro:"Maravillas De Cristo",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1°, 2° y 3° grado"
+},
+
+{
+id:"D008",
+nombre:"Julio Adan Ochoa Garcia",
+cedula:"453-240283-0000S",
+telefono:"82584532",
+inss:"18029093",
+centro:"Maravillas De Cristo",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"4°, 5° y 6° grado"
+},
+
+{
+id:"D009",
+nombre:"Jaritza Magdalena Donaire Estrada",
+cedula:"241-120804-1003N",
+telefono:"77863883",
+inss:"42919939",
+centro:"Nicarao",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1°, 2° y 3° grado"
+},
+
+{
+id:"D010",
+nombre:"Luis Alfonso Hernández Flores",
+cedula:"453-101087-0001T",
+telefono:"83250348",
+inss:"32454961",
+centro:"Nicarao",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"4°, 5° y 6° grado"
+},
+
+{
+id:"D011",
+nombre:"Izayda del Socorro Garcia Diaz",
+cedula:"453-251292-0000L",
+telefono:"78419138",
+inss:"42834692",
+centro:"Arte Azul",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1° a 6° grado"
+},
+
+{
+id:"D012",
+nombre:"Francisco Ramón Altamirano Brizuela",
+cedula:"453-090190-0001R",
+telefono:"85967997",
+inss:"30721492",
+centro:"El Progreso",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1° a 6° grado"
+},
+
+{
+id:"D013",
+nombre:"Henry Luis Arista Lanzas",
+cedula:"453-120593-0002J",
+telefono:"75093670",
+inss:"41516085",
+centro:"Pablo Antonio Cuadra",
+modalidad:"Primaria Multigrado",
+especialidad:"PEDAGOGIA",
+combinacion:"1° a 6° grado"
+},
+
+{
+id:"D014",
+nombre:"Judith Vanessa Estrada Urbina",
+cedula:"246-041204-1000F",
+telefono:"78622836",
+inss:"20476636",
+centro:"Nicaraocalli",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1° a 6° grado"
+},
+
+{
+id:"D015",
+nombre:"Saul Averruz Aguilar",
+cedula:"453-150581-0000D",
+telefono:"84620266",
+inss:"20771933",
+centro:"Ernesto Cabrera Cruz",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1° a 6° grado"
+},
+
+{
+id:"D016",
+nombre:"Elías Daniel Galeano García",
+cedula:"453-210495-0002L",
+telefono:"77996445",
+inss:"31901468",
+centro:"Benjamin Zeledon",
+modalidad:"Director",
+especialidad:"L Y L",
+combinacion:"Dirección"
+},
+
+{
+id:"D017",
+nombre:"Beyra Adalis Perez Gonzalez",
+cedula:"454-150197-1005A",
+telefono:"78768162",
+inss:"44119131",
+centro:"Benjamin Zeledon",
+modalidad:"Primaria Multigrado",
+especialidad:"",
+combinacion:"1°"
+},
+
+{
+id:"D018",
+nombre:"Yolanda del Carmen Gonzalez Campo",
+cedula:"441-310388-0001E",
+telefono:"88856903",
+inss:"4410342",
+centro:"Benjamin Zeledon",
+modalidad:"Primaria Regular",
+especialidad:"",
+combinacion:"2°"
+},
+
+{
+id:"D019",
+nombre:"Maria Francisca Laguna Coyado",
+cedula:"441-120377-0009G",
+telefono:"87877505",
+inss:"20057392",
+centro:"Benjamin Zeledon",
+modalidad:"Primaria Regular",
+especialidad:"",
+combinacion:"3°"
+},
+
+{
+id:"D020",
+nombre:"Jenifer Zoyla González Olivas",
+cedula:"453-020800-1000W",
+telefono:"86867424",
+inss:"40420581",
+centro:"Benjamin Zeledon",
+modalidad:"Primaria Regular",
+especialidad:"",
+combinacion:"4°"
+},
+
+{
+id:"D021",
+nombre:"Janeth del Socorro Laguna Coyado",
+cedula:"441-201180-0020W",
+telefono:"75335293",
+inss:"15792790",
+centro:"Monseñor Carlos Santi",
+modalidad:"Primaria Regular",
+especialidad:"",
+combinacion:"1°"
+},
+
+{
+id:"D022",
+nombre:"Mario Antonio Meza Áviles",
+cedula:"447-270586-0001Y",
+telefono:"78178759",
+inss:"16404223",
+centro:"Monseñor Carlos Santi",
+modalidad:"Primaria Regular",
+especialidad:"",
+combinacion:"2°"
+},
+
+{
+id:"D023",
+nombre:"Jimmy Antonio Blandón Díaz",
+cedula:"453-090587-0001J",
+telefono:"75437804",
+inss:"19212863",
+centro:"Monseñor Carlos Santi",
+modalidad:"Primaria Regular",
+especialidad:"L y L",
+combinacion:"3°"
+},
+
+{
+id:"D024",
+nombre:"Juan Francisco Centeno Zeledon",
+cedula:"453-240693-0000P",
+telefono:"83705090",
+inss:"37037837",
+centro:"Monseñor Carlos Santi",
+modalidad:"Primaria Regular",
+especialidad:"PEDAGOGIA",
+combinacion:"4°"
+},
+
+{
+id:"D025",
+nombre:"Edwin Gamaliel Castillo",
+cedula:"453-290500-1002N",
+telefono:"75420751",
+inss:"42618533",
+centro:"Monseñor Carlos Santi",
+modalidad:"Maestro itinerante de ingles",
+especialidad:"",
+combinacion:""
+},
+
+{
+id:"D026",
+nombre:"Ariel Antonio Matute Garcia",
+cedula:"453-141189-0000W",
+telefono:"84586264",
+inss:"19216913",
+centro:"Benjamin Zeledon",
+modalidad:"SADC",
+especialidad:"Ingles",
+combinacion:"Ingles"
+},
+
+{
+id:"D027",
+nombre:"Dina Vanesa Ramos Zeas",
+cedula:"452-300589-0005F",
+telefono:"83218606",
+inss:"24027742",
+centro:"Benjamin Zeledon",
+modalidad:"SADC",
+especialidad:"Lengua y Literatura",
+combinacion:"Lengua y Literatura"
+},
+
+{
+id:"D028",
+nombre:"Maria Luisa Mendez Gonzalez",
+cedula:"441-150171-0010J",
+telefono:"84951150",
+inss:"7790627",
+centro:"Benjamin Zeledon",
+modalidad:"SADC",
+especialidad:"Matematicas",
+combinacion:"Matematicas"
+},
+
+{
+id:"D029",
+nombre:"Pedro Gonzalez Rodriguez",
+cedula:"453-191076-0000N",
+telefono:"81828378",
+inss:"9293599",
+centro:"Benjamin Zeledon",
+modalidad:"SADC",
+especialidad:"",
+combinacion:""
+},
+
+{
+id:"D030",
+nombre:"Blinia Letran Gonzalez Alarcon",
+cedula:"441-081176-0017P",
+telefono:"76468163",
+inss:"11834106",
+centro:"Benjamin Zeledon",
+modalidad:"SADC",
+especialidad:"",
+combinacion:""
+},
+
+{
+id:"D031",
+nombre:"Jaritza Lissette Diaz Montoya",
+cedula:"443-180797-1001A",
+telefono:"76890527",
+inss:"43069862",
+centro:"Monseñor Carlos Santi",
+modalidad:"SADC",
+especialidad:"",
+combinacion:""
+},
+
+{
+id:"D032",
+nombre:"Neymi de los Angeles Hernandez Estrada",
+cedula:"452-071083-0000Q",
+telefono:"76327641",
+inss:"36893494",
+centro:"Monseñor Carlos Santi",
+modalidad:"SADC",
+especialidad:"",
+combinacion:""
+},
+
+{
+id:"D033",
+nombre:"Maykel Josue Gutierrez Valle",
+cedula:"452-150504-1002T",
+telefono:"84495232",
+inss:"41769926",
+centro:"Monseñor Carlos Santi",
+modalidad:"SADC",
+especialidad:"",
+combinacion:""
+}
+
+];
+
+
+/* ======================================================
+   ESCAPAR HTML
+====================================================== */
+
+function esc(valor){
+
+return String(valor??"")
+.replace(/[&<>"']/g,function(c){
+
+return {
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+}[c];
+
+});
+
+}
+
+
+/* ======================================================
+   OBTENER EXPEDIENTE
+====================================================== */
+
+function obtenerExpediente(docente){
+
+if(!datos[docente.id]){
+
+datos[docente.id]={
+
+campos:{},
+
+documentos:{},
+
+foto:"",
+
+actualizado:""
+
+};
+
+}
+
+return datos[docente.id];
+
+}
+
+
+/* ======================================================
+   OBTENER DATOS ACTUALES
+   LA HOJA DE VIDA TIENE PRIORIDAD
+====================================================== */
+
+function obtenerDatosActuales(docente){
+
+const exp=
+obtenerExpediente(docente);
+
+const c=exp.campos||{};
+
+return{
+
+id:docente.id,
+
+nombre:c.cv_nombre||docente.nombre,
+
+cedula:c.cv_cedula||docente.cedula,
+
+telefono:c.cv_telefono||docente.telefono,
+
+inss:c.cv_inss||docente.inss,
+
+centro:c.cv_centro||docente.centro,
+
+modalidad:c.cv_modalidad||docente.modalidad,
+
+especialidad:c.cv_especialidad||docente.especialidad,
+
+combinacion:c.cv_combinacion||docente.combinacion,
+
+codigo:c.cv_codigo||"",
+
+correo:c.cv_correo||"",
+
+nacimiento:c.cv_nacimiento||"",
+
+civil:c.cv_civil||"",
+
+direccion:c.cv_direccion||"",
+
+ingreso:c.cv_ingreso||"",
+
+formacion:c.cv_formacion||"",
+
+experiencia:c.cv_experiencia||"",
+
+capacitaciones:c.cv_capacitaciones||"",
+
+referencias:c.cv_referencias||"",
+
+observaciones:c.cv_observaciones||""
+
+};
+
+}
+
+
+/* ======================================================
+   GUARDAR
+====================================================== */
+
+async function guardarDatos(){
+
+  if(!docenteActual) return;
+
+  try{
+    const exp=obtenerExpediente(docenteActual);
+    await db.collection("expedientes")
+      .doc(docenteActual.id)
+      .set(exp,{merge:true});
+
+    actualizarEstadisticas();
+  }catch(error){
+    console.error(error);
+    alert("❌ No se pudo guardar en Firebase. Revisa las reglas de Firestore.");
+  }
+}
+
+
+/* ======================================================
+   LOGIN
+====================================================== */
+
+async function iniciarSesion(){
+
+  const usuario=(document.getElementById("usuario").value||"").trim();
+  const password=document.getElementById("password").value||"";
+
+  if(!usuario || !password){
+    document.getElementById("mensajeLogin").innerHTML=
+      '<div class="login-error">❌ Escriba usuario y contraseña.</div>';
+    return;
+  }
+
+  const loginBtn=document.querySelector(".login-btn");
+  if(loginBtn) loginBtn.disabled=true;
+
+  try{
+    /*
+      ACCESO DEL ADMINISTRADOR
+      Se puede entrar con ELIAS o con su correo.
+      La contraseña NUNCA está guardada en este HTML.
+      Firebase Authentication es quien la verifica.
+    */
+    let email=usuario;
+
+    if(usuario.toUpperCase()==="ELIAS"){
+      email=ADMIN_EMAIL;
+    }else if(usuario.includes("@")){
+      email=usuario.toLowerCase();
+    }
+
+    const cred=await auth.signInWithEmailAndPassword(email,password);
+    const user=cred.user;
+
+    /*
+      Verificación adicional del administrador.
+      El UID debe coincidir con el usuario ELIAS creado en Firebase.
+    */
+    if(user.uid===ADMIN_UID){
+
+      sesion={
+        uid:user.uid,
+        email:user.email||ADMIN_EMAIL,
+        rol:"administrador",
+        docenteId:null,
+        nombre:"ELIAS"
+      };
+
+    }else{
+
+      sesion={
+        uid:user.uid,
+        email:user.email||"",
+        rol:"",
+        docenteId:null,
+        nombre:user.email||"USUARIO"
+      };
+
+      const perfilSnap=await db.collection("usuarios").doc(user.uid).get();
+
+      if(!perfilSnap.exists){
+        await auth.signOut();
+        throw new Error("NO_PROFILE");
+      }
+
+      const perfil=perfilSnap.data()||{};
+
+      sesion.rol=(perfil.rol||"docente").toLowerCase();
+      sesion.docenteId=perfil.docenteId||null;
+      sesion.nombre=
+        perfil.Nombre||
+        perfil.nombre||
+        perfil.usuario||
+        user.email||
+        "USUARIO";
+    }
+
+    /*
+      Cargamos la información solamente después de comprobar
+      correctamente la autenticación.
+    */
+    await cargarDatosFirebase();
+    await cargarHistorialFirebase();
+
+    document.getElementById("login").classList.add("oculto");
+    document.getElementById("sistema").classList.remove("oculto");
+
+    aplicarPermisos();
+
+    const encabezado=document.querySelector(".usuario-header strong");
+
+    if(encabezado){
+      encabezado.textContent=
+        (sesion.rol==="administrador" ? "👑 " : "👤 ")+
+        sesion.nombre.toUpperCase()+
+        " · "+
+        sesion.rol.toUpperCase();
+    }
+
+    mostrarDocentes();
+
+    if(esAdmin()){
+      cargarUsuarios();
+      mostrarHistorial();
+    }
+
+    actualizarEstadisticas();
+
+  }catch(error){
+
+    console.error("ERROR DE INICIO DE SESIÓN:",error);
+
+    let mensaje="❌ No se pudo iniciar sesión.";
+
+    /*
+      Estos mensajes permiten saber exactamente qué está
+      rechazando Firebase, en vez de ocultar el error.
+    */
+    switch(error.code){
+
+      case "auth/invalid-credential":
+      case "auth/invalid-login-credentials":
+        mensaje="❌ El correo o la contraseña no coinciden con Firebase Authentication.";
+        break;
+
+      case "auth/wrong-password":
+        mensaje="❌ La contraseña no coincide con la cuenta de Firebase.";
+        break;
+
+      case "auth/user-not-found":
+        mensaje="❌ La cuenta de correo no existe en Firebase Authentication.";
+        break;
+
+      case "auth/user-disabled":
+        mensaje="❌ Esta cuenta está deshabilitada en Firebase Authentication.";
+        break;
+
+      case "auth/too-many-requests":
+        mensaje="❌ Firebase bloqueó temporalmente los intentos por demasiados intentos. Espera unos minutos.";
+        break;
+
+      case "auth/network-request-failed":
+        mensaje="❌ No hay conexión con Firebase. Revisa Internet y vuelve a intentarlo.";
+        break;
+
+      case "auth/operation-not-allowed":
+        mensaje="❌ El acceso por correo y contraseña no está habilitado en Firebase Authentication.";
+        break;
+
+      case "permission-denied":
+        mensaje="❌ Firebase Authentication funcionó, pero las reglas de Firestore están bloqueando el acceso.";
+        break;
+
+      default:
+
+        if(error.message==="NO_PROFILE"){
+          mensaje="❌ El usuario entró correctamente, pero no tiene un perfil en la colección 'usuarios'.";
+        }else if(error.message){
+          mensaje="❌ Error: "+error.message;
+        }
+
+        break;
+    }
+
+    document.getElementById("mensajeLogin").innerHTML=
+      '<div class="login-error">'+esc(mensaje)+
+      '<br><small style="display:block;margin-top:8px;color:#8b1e1e;">' +
+      'Código Firebase: '+esc(error.code || "sin código")+
+      '<br>Proyecto: expedientes-docentes-ner-7</small></div>';
+
+  }finally{
+
+    if(loginBtn) loginBtn.disabled=false;
+
+  }
+}
+
+
+/* ======================================================
+   CERRAR SESION
+====================================================== */
+
+async function cerrarSesion(){
+  try{
+    await auth.signOut();
+  }catch(e){}
+  location.reload();
+}
+
+
+/* ======================================================
+   MENU
+====================================================== */
+
+function mostrarSeccion(id){
+
+document
+.querySelectorAll(".seccion")
+.forEach(function(s){
+
+s.classList.remove("activa");
+
+});
+
+
+document
+.getElementById(id)
+.classList
+.add("activa");
+
+
+if(id==="docentes")
+mostrarDocentes();
+
+if(id==="usuarios")
+cargarUsuarios();
+
+if(id==="historial")
+mostrarHistorial();
+
+}
+
+
+/* ======================================================
+   LISTA DOCENTES
+   USA DATOS ACTUALIZADOS
+====================================================== */
+
+function mostrarDocentes(){
+
+const busqueda=
+(
+document
+.getElementById("buscarDocente")
+?.value||""
+)
+.toLowerCase()
+.trim();
+
+
+const lista=
+DOCENTES
+.map(function(docente){
+
+return obtenerDatosActuales(docente);
+
+})
+.filter(function(d){
+
+const texto=(
+
+d.nombre+" "+
+d.cedula+" "+
+d.telefono+" "+
+d.inss+" "+
+d.centro+" "+
+d.modalidad+" "+
+d.especialidad
+
+).toLowerCase();
+
+return texto.includes(busqueda);
+
+})
+.filter(function(d){
+  return esAdmin() || !sesion.docenteId || d.id===sesion.docenteId;
+});
+
+
+document
+.getElementById("tablaDocentes")
+.innerHTML=
+
+lista.map(function(d){
+
+return`
+
+<tr>
+
+<td>
+
+<strong>
+${esc(d.nombre)}
+</strong>
+
+<br>
+
+<small>
+🪪 ${esc(d.cedula)}
+</small>
+
+</td>
+
+
+<td>
+${esc(d.centro)}
+</td>
+
+
+<td>
+${esc(d.modalidad)}
+</td>
+
+
+<td>
+${esc(d.especialidad||"—")}
+</td>
+
+
+<td>
+
+<span class="badge">
+ACTIVO
+</span>
+
+</td>
+
+
+<td>
+
+<button
+onclick="abrirExpediente('${d.id}')">
+
+📂 ABRIR
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+}).join("")||
+
+`
+
+<tr>
+
+<td
+colspan="6"
+class="vacio">
+
+No se encontraron docentes.
+
+</td>
+
+</tr>
+
+`;
+
+}
+
+
+/* ======================================================
+   ABRIR EXPEDIENTE
+====================================================== */
+
+function abrirExpediente(id){
+
+  if(!esAdmin() && sesion.docenteId!==id){
+    alert("❌ No tienes permiso para abrir este expediente.");
+    return;
+  }
+
+  docenteActual=DOCENTES.find(function(d){ return d.id===id; });
+  if(!docenteActual) return;
+
+  document.getElementById("modalExpediente").classList.add("activo");
+  renderizarExpediente();
+}
+
+
+/* ======================================================
+   CERRAR EXPEDIENTE
+====================================================== */
+
+function cerrarExpediente(){
+
+document
+.getElementById("modalExpediente")
+.classList
+.remove("activo");
+
+}
+
+
+/* ======================================================
+   RENDER EXPEDIENTE
+====================================================== */
+
+function renderizarExpediente(){
+
+const exp=
+obtenerExpediente(docenteActual);
+
+const d=
+obtenerDatosActuales(docenteActual);
+
+
+document
+.getElementById("tituloExpediente")
+.textContent=
+"📂 "+d.nombre;
+
+
+document
+.getElementById("subtituloExpediente")
+.textContent=
+"Expediente docente · Información actualizada";
+
+
+const foto=
+exp.foto
+
+?
+
+`<img
+src="${exp.foto}"
+alt="Foto">`
+
+:
+
+"📸";
+
+
+document
+.getElementById("perfilExpediente")
+.innerHTML=`
+
+<div class="foto-perfil">
+
+${foto}
+
+</div>
+
+
+<div style="width:100%">
+
+<h2>
+${esc(d.nombre)}
+</h2>
+
+
+<div class="datos-rapidos">
+
+
+<div class="dato-rapido">
+
+<small>
+🪪 Cédula
+</small>
+
+<strong>
+${esc(d.cedula||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+📞 Teléfono
+</small>
+
+<strong>
+${esc(d.telefono||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+🏫 Centro
+</small>
+
+<strong>
+${esc(d.centro||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+📚 Modalidad
+</small>
+
+<strong>
+${esc(d.modalidad||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+🎓 Especialidad
+</small>
+
+<strong>
+${esc(d.especialidad||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+🧾 INSS
+</small>
+
+<strong>
+${esc(d.inss||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+🔢 Código docente
+</small>
+
+<strong>
+${esc(d.codigo||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+📖 Combinación
+</small>
+
+<strong>
+${esc(d.combinacion||"—")}
+</strong>
+
+</div>
+
+
+<div class="dato-rapido">
+
+<small>
+📧 Correo
+</small>
+
+<strong>
+${esc(d.correo||"—")}
+</strong>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+
+/* RECONSTRUIR PESTAÑAS */
+
+document
+.getElementById("tab-hojaVida")
+.innerHTML=
+renderHojaVida(exp);
+
+
+document
+.getElementById("tab-titulos")
+.innerHTML=
+renderTitulos(exp);
+
+
+document
+.getElementById("tab-cedula")
+.innerHTML=
+renderCedula(exp);
+
+
+document
+.getElementById("tab-evaluaciones")
+.innerHTML=
+renderEvaluaciones(exp);
+
+
+document
+.getElementById("tab-record")
+.innerHTML=
+renderRecord(exp);
+
+
+document
+.getElementById("tab-fotos")
+.innerHTML=
+renderFotos(exp);
+
+}
+
+
+/* ======================================================
+   CAMPO
+====================================================== */
+
+function campo(
+label,
+id,
+value,
+type="text"
+){
+
+return`
+
+<div class="campo">
+
+<label>
+${label}
+</label>
+
+<input
+id="${id}"
+type="${type}"
+value="${esc(value)}">
+
+</div>
+
+`;
+
+}
+
+
+/* ======================================================
+   HOJA DE VIDA
+====================================================== */
+
+function renderHojaVida(exp){
+
+const c=exp.campos||{};
+
+const d=
+obtenerDatosActuales(docenteActual);
+
+
+return`
+
+<h2>
+📄 Hoja de Vida
+</h2>
+
+
+<div class="aviso">
+
+<strong>
+🔄 INFORMACIÓN CENTRALIZADA
+</strong>
+
+<br><br>
+
+Los datos principales que modifiques aquí
+se actualizarán automáticamente en todo el expediente.
+
+<br><br>
+
+Por ejemplo:
+
+si cambias la cédula aquí,
+también cambiará la cédula mostrada arriba
+y en la lista de docentes.
+
+</div>
+
+
+<div class="grid2">
+
+
+${campo(
+"Nombre completo",
+"cv_nombre",
+d.nombre
+)}
+
+
+${campo(
+"Número de cédula",
+"cv_cedula",
+d.cedula
+)}
+
+
+${campo(
+"Teléfono",
+"cv_telefono",
+d.telefono
+)}
+
+
+${campo(
+"Número INSS",
+"cv_inss",
+d.inss
+)}
+
+
+${campo(
+"Centro educativo",
+"cv_centro",
+d.centro
+)}
+
+
+${campo(
+"Modalidad",
+"cv_modalidad",
+d.modalidad
+)}
+
+
+${campo(
+"Especialidad",
+"cv_especialidad",
+d.especialidad
+)}
+
+
+${campo(
+"Combinación / grado",
+"cv_combinacion",
+d.combinacion
+)}
+
+
+${campo(
+"Código docente",
+"cv_codigo",
+d.codigo
+)}
+
+
+${campo(
+"Correo electrónico",
+"cv_correo",
+d.correo
+)}
+
+
+${campo(
+"Fecha de nacimiento",
+"cv_nacimiento",
+d.nacimiento,
+"date"
+)}
+
+
+${campo(
+"Estado civil",
+"cv_civil",
+d.civil
+)}
+
+
+${campo(
+"Fecha de ingreso",
+"cv_ingreso",
+d.ingreso,
+"date"
+)}
+
+
+<div class="campo completo">
+
+<label>
+Dirección domiciliaria
+</label>
+
+<textarea
+id="cv_direccion">${esc(d.direccion)}</textarea>
+
+</div>
+
+
+<div class="campo completo">
+
+<label>
+Formación académica
+</label>
+
+<textarea
+id="cv_formacion">${esc(d.formacion)}</textarea>
+
+</div>
+
+
+<div class="campo completo">
+
+<label>
+Experiencia laboral
+</label>
+
+<textarea
+id="cv_experiencia">${esc(d.experiencia)}</textarea>
+
+</div>
+
+
+<div class="campo completo">
+
+<label>
+Capacitaciones
+</label>
+
+<textarea
+id="cv_capacitaciones">${esc(d.capacitaciones)}</textarea>
+
+</div>
+
+
+<div class="campo completo">
+
+<label>
+Referencias personales
+</label>
+
+<textarea
+id="cv_referencias">${esc(d.referencias)}</textarea>
+
+</div>
+
+
+<div class="campo completo">
+
+<label>
+Observaciones
+</label>
+
+<textarea
+id="cv_observaciones">${esc(d.observaciones)}</textarea>
+
+</div>
+
+
+</div>
+
+
+<br>
+
+
+<button
+class="btn-verde"
+onclick="guardarHojaVida()">
+
+💾 GUARDAR CAMBIOS
+
+</button>
+
+
+<button
+class="btn-claro"
+onclick="seleccionarArchivo('hojaVida')">
+
+📎 ADJUNTAR HOJA DE VIDA
+
+</button>
+
+
+<br><br>
+
+${mostrarDocumentos(
+exp,
+"hojaVida"
+)}
+
+`;
+
+}
+
+
+/* ======================================================
+   GUARDAR HOJA DE VIDA
+====================================================== */
+
+function guardarHojaVida(){
+
+const exp=
+obtenerExpediente(docenteActual);
+
+
+const ids=[
+
+"cv_nombre",
+"cv_cedula",
+"cv_telefono",
+"cv_inss",
+"cv_centro",
+"cv_modalidad",
+"cv_especialidad",
+"cv_combinacion",
+"cv_codigo",
+"cv_correo",
+"cv_nacimiento",
+"cv_civil",
+"cv_ingreso",
+"cv_direccion",
+"cv_formacion",
+"cv_experiencia",
+"cv_capacitaciones",
+"cv_referencias",
+"cv_observaciones"
+
+];
+
+
+ids.forEach(function(id){
+
+const el=
+document.getElementById(id);
+
+if(el){
+
+exp.campos[id]=el.value;
+
+}
+
+});
+
+
+exp.actualizado=
+new Date().toLocaleString();
+
+
+agregarHistorial(
+"Actualizó los datos de la Hoja de Vida",
+docenteActual.id
+);
+
+
+guardarDatos();
+
+
+/*
+IMPORTANTE:
+VOLVEMOS A RENDERIZAR TODO.
+POR ESO LOS DATOS DE ARRIBA
+CAMBIAN INMEDIATAMENTE.
+*/
+
+renderizarExpediente();
+
+mostrarDocentes();
+
+
+alert(
+"✅ Información actualizada correctamente.\n\nLos cambios ya se reflejaron en todo el expediente."
+);
+
+}
+
+
+/* ======================================================
+   TITULOS
+====================================================== */
+
+function renderTitulos(exp){
+
+return`
+
+<h2>
+🎓 Títulos
+</h2>
+
+
+<div class="aviso">
+
+Puedes tomar fotografías de los títulos
+directamente con la cámara del teléfono.
+
+</div>
+
+
+${documentoBoton(
+exp,
+"titulo_maestro",
+"🎓 Título de Maestro / Profesor"
+)}
+
+
+${documentoBoton(
+exp,
+"titulo_licenciatura",
+"🎓 Licenciatura"
+)}
+
+
+${documentoBoton(
+exp,
+"titulo_maestria",
+"🎓 Maestría"
+)}
+
+
+${documentoBoton(
+exp,
+"titulo_tecnico",
+"🎓 Técnico"
+)}
+
+
+${documentoBoton(
+exp,
+"titulo_otro",
+"🎓 Otros títulos"
+)}
+
+`;
+
+}
+
+
+/* ======================================================
+   CEDULA
+====================================================== */
+
+function renderCedula(exp){
+
+const d=
+obtenerDatosActuales(docenteActual);
+
+
+return`
+
+<h2>
+🪪 Cédula de identidad
+</h2>
+
+
+<div class="aviso">
+
+<strong>
+Número de cédula actual:
+</strong>
+
+${esc(d.cedula)}
+
+<br><br>
+
+La información de la cédula se mantiene vinculada
+con la Hoja de Vida.
+
+<br><br>
+
+Si se cambia la cédula en Hoja de Vida,
+el número mostrado arriba también cambia.
+
+</div>
+
+
+${documentoBoton(
+exp,
+"cedula_frente",
+"🪪 Frente de cédula"
+)}
+
+
+${documentoBoton(
+exp,
+"cedula_reverso",
+"🪪 Reverso de cédula"
+)}
+
+`;
+
+}
+
+
+/* ======================================================
+   EVALUACIONES
+====================================================== */
+
+function renderEvaluaciones(exp){
+
+const c=
+exp.campos||{};
+
+
+return`
+
+<h2>
+⭐ Evaluaciones
+</h2>
+
+
+${documentoBoton(
+exp,
+"evaluacion_desempeno",
+"⭐ Evaluación del desempeño"
+)}
+
+
+${documentoBoton(
+exp,
+"autoevaluacion",
+"⭐ Autoevaluación"
+)}
+
+
+${documentoBoton(
+exp,
+"evaluacion_otra",
+"⭐ Otras evaluaciones"
+)}
+
+
+<div class="campo">
+
+<label>
+Puntaje / observaciones
+</label>
+
+<textarea
+id="evaluacion_notas">${esc(c.evaluacion_notas||"")}</textarea>
+
+</div>
+
+
+<br>
+
+<button
+class="btn-verde"
+onclick="guardarCampoSimple(
+'evaluacion_notas',
+'Actualizó evaluaciones'
+)">
+
+💾 GUARDAR
+
+</button>
+
+`;
+
+}
+
+
+/* ======================================================
+   RECORD
+====================================================== */
+
+function renderRecord(exp){
+
+const c=
+exp.campos||{};
+
+
+return`
+
+<h2>
+📋 Récord profesional
+</h2>
+
+
+${documentoBoton(
+exp,
+"record_documento",
+"📋 Récord / constancia laboral"
+)}
+
+
+<div class="campo">
+
+<label>
+Historial profesional / observaciones
+</label>
+
+<textarea
+id="record_notas">${esc(c.record_notas||"")}</textarea>
+
+</div>
+
+
+<br>
+
+<button
+class="btn-verde"
+onclick="guardarCampoSimple(
+'record_notas',
+'Actualizó récord profesional'
+)">
+
+💾 GUARDAR
+
+</button>
+
+`;
+
+}
+
+
+/* ======================================================
+   FOTOS
+====================================================== */
+
+function renderFotos(exp){
+
+return`
+
+<h2>
+📸 Foto de rostro
+</h2>
+
+
+<div class="aviso">
+
+Esta fotografía será utilizada
+como fotografía principal del expediente.
+
+</div>
+
+
+${
+exp.foto
+
+?
+
+`<img
+src="${exp.foto}"
+style="
+width:180px;
+height:220px;
+object-fit:cover;
+border-radius:12px;
+border:3px solid #0878ff;
+">`
+
+:
+
+`<div class="vacio">
+No hay fotografía registrada.
+</div>`
+
+}
+
+
+<br><br>
+
+
+<button
+class="btn-verde"
+onclick="abrirCamara('rostro')">
+
+📷 TOMAR FOTO
+
+</button>
+
+
+<button
+class="btn-claro"
+onclick="seleccionarArchivo('rostro')">
+
+📎 SELECCIONAR FOTO
+
+</button>
+
+`;
+
+}
+
+
+/* ======================================================
+   DOCUMENTOS
+====================================================== */
+
+function documentoBoton(
+exp,
+clave,
+nombre
+){
+
+return`
+
+<div class="documento">
+
+<div class="documento-info">
+
+<strong>
+${nombre}
+</strong>
+
+<br>
+
+<small>
+
+${(exp.documentos[clave]||[]).length}
+archivo(s)
+
+</small>
+
+
+<div>
+
+${mostrarDocumentos(
+exp,
+clave
+)}
+
+</div>
+
+</div>
+
+
+<div class="documento-botones">
+
+<button
+class="btn-claro"
+onclick="seleccionarArchivo('${clave}')">
+
+📎 ARCHIVO
+
+</button>
+
+
+<button
+onclick="abrirCamara('${clave}')">
+
+📷 CÁMARA
+
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+/* ======================================================
+   MOSTRAR DOCUMENTOS
+====================================================== */
+
+function mostrarDocumentos(
+exp,
+clave
+){
+
+const lista=
+exp.documentos[clave]||[];
+
+
+return lista.map(function(archivo,index){
+
+return`
+
+<div style="margin-top:8px">
+
+<a
+href="${archivo.data}"
+target="_blank">
+
+📄 ${esc(archivo.nombre)}
+
+</a>
+
+
+${
+archivo.tipo &&
+archivo.tipo.startsWith("image/")
+
+?
+
+`<img
+src="${archivo.data}"
+class="miniatura">`
+
+:
+
+""
+
+}
+
+
+<br>
+
+<button
+class="btn-rojo"
+style="
+padding:5px 8px;
+font-size:11px;
+margin-top:5px;
+"
+onclick="eliminarDocumento(
+'${clave}',
+${index}
+)">
+
+ELIMINAR
+
+</button>
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+/* ======================================================
+   ARCHIVOS
+====================================================== */
+
+function seleccionarArchivo(tipo){
+
+const selector=
+document.getElementById("selectorArchivo");
+
+
+selector.accept=
+tipo==="hojaVida"
+
+?
+
+".pdf,.doc,.docx,image/*"
+
+:
+
+"image/*,.pdf";
+
+
+selector.onchange=function(){
+
+const archivo=
+selector.files[0];
+
+if(archivo){
+
+guardarArchivo(
+tipo,
+archivo
+);
+
+}
+
+selector.value="";
+
+};
+
+
+selector.click();
+
+}
+
+
+/* ======================================================
+   GUARDAR ARCHIVO
+====================================================== */
+
+async function guardarArchivo(tipo,archivo){
+
+  if(!docenteActual || !archivo) return;
+
+  const exp=obtenerExpediente(docenteActual);
+
+  try{
+    let archivoFinal=archivo;
+
+    // Para fotografías intentamos reducir el tamaño antes de guardarlas.
+    if(archivo.type && archivo.type.startsWith("image/") && archivo.size>MAX_FIRESTORE_FILE_BYTES){
+      archivoFinal=await comprimirImagen(archivo);
+    }
+
+    // Si Storage está habilitado, lo usamos para archivos grandes.
+    if(storage && archivoFinal.size>MAX_FIRESTORE_FILE_BYTES){
+      const ruta="expedientes/"+docenteActual.id+"/"+Date.now()+"_"+archivoFinal.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+      const ref=storage.ref().child(ruta);
+      await ref.put(archivoFinal);
+      const url=await ref.getDownloadURL();
+
+      if(tipo==="rostro"){
+        exp.foto=url;
+      }else{
+        if(!exp.documentos[tipo]) exp.documentos[tipo]=[];
+        exp.documentos[tipo].push({
+          nombre:archivoFinal.name,
+          tipo:archivoFinal.type,
+          url:url,
+          almacenamiento:"storage",
+          fecha:new Date().toLocaleString()
+        });
+      }
+
+    }else{
+      // Firestore permite guardar archivos pequeños como base64.
+      if(archivoFinal.size>MAX_FIRESTORE_FILE_BYTES){
+        alert("⚠️ Este archivo pesa demasiado para guardarlo directamente en Firestore.\n\nActiva Firebase Storage (plan de facturación) para guardar documentos grandes.");
+        return;
+      }
+
+      const data=await archivoADataURL(archivoFinal);
+
+      if(tipo==="rostro"){
+        exp.foto=data;
+        agregarHistorial("Actualizó fotografía de rostro",docenteActual.id);
+      }else{
+        if(!exp.documentos[tipo]) exp.documentos[tipo]=[];
+        exp.documentos[tipo].push({
+          nombre:archivoFinal.name,
+          tipo:archivoFinal.type,
+          data:data,
+          almacenamiento:"firestore",
+          fecha:new Date().toLocaleString()
+        });
+        agregarHistorial("Agregó documento: "+archivoFinal.name,docenteActual.id);
+      }
+    }
+
+    await guardarDatos();
+    renderizarExpediente();
+
+    alert("✅ Archivo guardado correctamente en Firebase.");
+
+  }catch(error){
+    console.error(error);
+    alert("❌ No se pudo guardar el archivo.\n\n"+(error.message||"Revisa Firebase Storage y las reglas."));
+  }
+}
+
+function archivoADataURL(archivo){
+  return new Promise(function(resolve,reject){
+    const lector=new FileReader();
+    lector.onload=()=>resolve(lector.result);
+    lector.onerror=reject;
+    lector.readAsDataURL(archivo);
+  });
+}
+
+function comprimirImagen(archivo){
+  return new Promise(function(resolve,reject){
+    const lector=new FileReader();
+    lector.onload=function(){
+      const img=new Image();
+      img.onload=function(){
+        const max=1400;
+        let w=img.width;
+        let h=img.height;
+        if(w>max || h>max){
+          const factor=Math.min(max/w,max/h);
+          w=Math.round(w*factor);
+          h=Math.round(h*factor);
+        }
+
+        const canvas=document.createElement("canvas");
+        canvas.width=w;
+        canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error("No se pudo comprimir la imagen.")); return; }
+          resolve(new File([blob],"foto_"+Date.now()+".jpg",{type:"image/jpeg"}));
+        },"image/jpeg",0.72);
+      };
+      img.onerror=reject;
+      img.src=lector.result;
+    };
+    lector.onerror=reject;
+    lector.readAsDataURL(archivo);
+  });
+}
+
+
+/* ======================================================
+   ELIMINAR DOCUMENTO
+====================================================== */
+
+async function eliminarDocumento(tipo,indice){
+
+  const exp=obtenerExpediente(docenteActual);
+  if(!exp.documentos[tipo]) return;
+
+  const archivo=exp.documentos[tipo][indice];
+
+  try{
+    if(archivo && archivo.almacenamiento==="storage" && archivo.url && storage){
+      try{
+        await storage.refFromURL(archivo.url).delete();
+      }catch(e){
+        console.warn("No se pudo eliminar el archivo de Storage:",e);
+      }
+    }
+
+    exp.documentos[tipo].splice(indice,1);
+
+    agregarHistorial("Eliminó documento",docenteActual.id);
+    await guardarDatos();
+    renderizarExpediente();
+
+  }catch(error){
+    console.error(error);
+    alert("❌ No se pudo eliminar el documento.");
+  }
+}
+
+
+/* ======================================================
+   CAMARA
+====================================================== */
+
+async function abrirCamara(tipo){
+
+tipoCamara=tipo;
+
+
+document
+.getElementById("modalCamara")
+.classList
+.add("activo");
+
+
+document
+.getElementById("tituloCamara")
+.textContent=
+
+tipo==="rostro"
+
+?
+
+"📷 Fotografía de rostro"
+
+:
+
+"📷 Fotografiar documento";
+
+
+try{
+
+streamCamara=
+await navigator.mediaDevices
+.getUserMedia({
+
+video:{
+
+facingMode:
+tipo==="rostro"
+?
+"user"
+:
+"environment",
+
+width:{
+ideal:1920
+},
+
+height:{
+ideal:1080
+}
+
+},
+
+audio:false
+
+});
+
+
+document
+.getElementById("video")
+.srcObject=
+streamCamara;
+
+
+document
+.getElementById("mensajeCamara")
+.textContent=
+"Cámara activa. Coloca correctamente el documento y pulsa TOMAR FOTO.";
+
+}
+
+catch(error){
+
+document
+.getElementById("mensajeCamara")
+.textContent=
+"No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
+
+}
+
+}
+
+
+/* ======================================================
+   TOMAR FOTO
+====================================================== */
+
+function tomarFoto(){
+
+if(!streamCamara)
+return;
+
+
+const video=
+document.getElementById("video");
+
+const canvas=
+document.getElementById("canvas");
+
+
+canvas.width=
+video.videoWidth;
+
+canvas.height=
+video.videoHeight;
+
+
+canvas
+.getContext("2d")
+.drawImage(
+video,
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+
+canvas.toBlob(function(blob){
+
+const archivo=
+new File(
+
+[blob],
+
+"foto_"+Date.now()+".jpg",
+
+{
+type:"image/jpeg"
+}
+
+);
+
+
+cerrarCamara();
+
+guardarArchivo(
+tipoCamara,
+archivo
+);
+
+},
+"image/jpeg",
+.90
+);
+
+}
+
+
+/* ======================================================
+   CERRAR CAMARA
+====================================================== */
+
+function cerrarCamara(){
+
+if(streamCamara){
+
+streamCamara
+.getTracks()
+.forEach(function(track){
+
+track.stop();
+
+});
+
+streamCamara=null;
+
+}
+
+
+document
+.getElementById("modalCamara")
+.classList
+.remove("activo");
+
+}
+
+
+/* ======================================================
+   TABS
+====================================================== */
+
+function abrirTab(
+id,
+boton
+){
+
+document
+.querySelectorAll(".tab")
+.forEach(function(tab){
+
+tab.classList.remove("activa");
+
+});
+
+
+document
+.getElementById("tab-"+id)
+.classList
+.add("activa");
+
+
+document
+.querySelectorAll(".tabs button")
+.forEach(function(btn){
+
+btn.classList.remove("activa");
+
+});
+
+
+boton.classList.add("activa");
+
+}
+
+
+/* ======================================================
+   CAMPOS SIMPLES
+====================================================== */
+
+function guardarCampoSimple(
+id,
+accion
+){
+
+const exp=
+obtenerExpediente(docenteActual);
+
+
+const elemento=
+document.getElementById(id);
+
+
+if(!elemento)
+return;
+
+
+exp.campos[id]=
+elemento.value;
+
+
+agregarHistorial(
+accion,
+docenteActual.id
+);
+
+
+guardarDatos();
+
+renderizarExpediente();
+
+
+alert(
+"✅ Información guardada."
+);
+
+}
+
+
+/* ======================================================
+   HISTORIAL
+====================================================== */
+
+function agregarHistorial(accion,docenteId){
+
+  if(!datos.historial) datos.historial=[];
+
+  const docente=DOCENTES.find(function(d){ return d.id===docenteId; });
+
+  const item={
+    fecha:new Date().toLocaleString(),
+    usuario:sesion.nombre||"ELIAS",
+    accion:accion,
+    docente:docente?docente.nombre:docenteId
+  };
+
+  datos.historial.unshift(item);
+  datos.historial=datos.historial.slice(0,500);
+
+  db.collection("historial").add({
+    ...item,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(function(error){
+    console.error("No se pudo registrar el historial:",error);
+  });
+}
+
+
+function mostrarHistorial(){
+
+const lista=
+datos.historial||[];
+
+
+document
+.getElementById("listaHistorial")
+.innerHTML=
+
+lista.length
+
+?
+
+lista.map(function(item){
+
+return`
+
+<div class="historial-item">
+
+<strong>
+${esc(item.accion)}
+</strong>
+
+<br>
+
+👨‍🏫
+${esc(item.docente)}
+
+<br>
+
+👤
+${esc(item.usuario)}
+
+&nbsp; · &nbsp;
+
+🕒
+${esc(item.fecha)}
+
+</div>
+
+`;
+
+}).join("")
+
+:
+
+`<div class="vacio">
+Todavía no hay modificaciones registradas.
+</div>`;
+
+}
+
+
+/* ======================================================
+   ESTADISTICAS
+====================================================== */
+
+function actualizarEstadisticas(){
+
+let cv=0;
+let fotos=0;
+
+
+DOCENTES.forEach(function(docente){
+
+const exp=
+obtenerExpediente(docente);
+
+
+if(
+exp.documentos.hojaVida &&
+exp.documentos.hojaVida.length>0
+){
+
+cv++;
+
+}
+
+
+if(exp.foto){
+
+fotos++;
+
+}
+
+});
+
+
+document
+.getElementById("totalDocentes")
+.textContent=
+DOCENTES.length;
+
+
+document
+.getElementById("totalActivos")
+.textContent=
+DOCENTES.length;
+
+
+document
+.getElementById("totalCV")
+.textContent=
+cv;
+
+
+document
+.getElementById("totalFotos")
+.textContent=
+fotos;
+
+}
+
+
+/* ======================================================
+   USUARIOS
+====================================================== */
+
+function cargarUsuarios(){
+
+const select=
+document
+.getElementById("usuarioDocente");
+
+
+select.innerHTML=
+DOCENTES.map(function(d){
+
+const actual=
+obtenerDatosActuales(d);
+
+
+return`
+
+<option value="${d.id}">
+
+${esc(actual.nombre)}
+
+</option>
+
+`;
+
+}).join("");
+
+
+mostrarUsuarios();
+
+}
+
+
+async function crearUsuario(){
+
+  if(!esAdmin()){
+    alert("❌ Solo el administrador puede crear usuarios.");
+    return;
+  }
+
+  const usuario=document.getElementById("nuevoUsuario").value.trim();
+  const password=document.getElementById("nuevaPassword").value;
+  const docenteId=document.getElementById("usuarioDocente").value;
+  const rol=document.getElementById("nivelAcceso").value;
+
+  if(!usuario || !password){
+    alert("Escriba el correo electrónico y la contraseña.");
+    return;
+  }
+
+  if(!usuario.includes("@")){
+    alert("⚠️ El usuario debe ser un correo electrónico válido.");
+    return;
+  }
+
+  if(password.length<6){
+    alert("⚠️ La contraseña debe tener al menos 6 caracteres.");
+    return;
+  }
+
+  try{
+    // App secundaria: crea el usuario sin cerrar la sesión del administrador.
+    const secondaryName="SecondaryAuth_"+Date.now();
+    const secondaryApp=firebase.initializeApp(firebaseConfig,secondaryName);
+    const secondaryAuth=secondaryApp.auth();
+
+    const cred=await secondaryAuth.createUserWithEmailAndPassword(usuario,password);
+    const nuevoUid=cred.user.uid;
+
+    await db.collection("usuarios").doc(nuevoUid).set({
+      usuario:usuario,
+      correo:usuario,
+      docenteId:docenteId,
+      rol:rol.toLowerCase(),
+      Nombre:(DOCENTES.find(d=>d.id===docenteId)||{}).nombre||"",
+      Activo:true,
+      creadoPor:sesion.uid,
+      fechaCreacion:new Date().toLocaleString()
+    });
+
+    await secondaryAuth.signOut();
+    await secondaryApp.delete();
+
+    agregarHistorial("Creó usuario "+usuario,docenteId);
+
+    mostrarUsuarios();
+
+    document.getElementById("nuevoUsuario").value="";
+    document.getElementById("nuevaPassword").value="";
+
+    alert("✅ Usuario creado correctamente.\n\nYa puede iniciar sesión con ese correo y contraseña.");
+
+  }catch(error){
+    console.error(error);
+
+    let msg=error.message||"No se pudo crear el usuario.";
+    if(error.code==="auth/email-already-in-use"){
+      msg="Ese correo ya está registrado en Firebase Authentication.";
+    }
+
+    alert("❌ "+msg);
+  }
+}
+
+
+async function mostrarUsuarios(){
+
+  if(!esAdmin()) return;
+
+  const contenedor=document.getElementById("listaUsuarios");
+  contenedor.innerHTML='<div class="vacio">Cargando usuarios...</div>';
+
+  try{
+    const snap=await db.collection("usuarios").get();
+
+    let html=`
+      <div class="documento">
+        <div>
+          👑 <strong>ELIAS</strong>
+          <br>Administrador Principal
+          <br><strong>Acceso a todos los expedientes</strong>
+        </div>
+      </div>
+    `;
+
+    snap.forEach(function(doc){
+      const u=doc.data()||{};
+      const docente=DOCENTES.find(function(d){ return d.id===u.docenteId; });
+      const actual=docente?obtenerDatosActuales(docente):null;
+
+      html+=`
+        <div class="documento">
+          <div>
+            👤 <strong>${esc(u.usuario||u.correo||doc.id)}</strong>
+            <br>Rol: ${esc(u.rol||"docente")}
+            <br>Docente: ${esc(actual?.nombre||u.Nombre||"Sin asignar")}
+            <br><span class="badge">${u.Activo===false?"INACTIVO":"ACTIVO"}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    contenedor.innerHTML=html;
+
+  }catch(error){
+    console.error(error);
+    contenedor.innerHTML='<div class="login-error">❌ No se pudieron cargar los usuarios. Revisa las reglas de Firestore.</div>';
+  }
+}
+
+
+/* ======================================================
+   INICIO
+====================================================== */
+
+function esAdmin(){
+  return sesion.uid===ADMIN_UID || sesion.rol==="administrador";
+}
+
+async function cargarDatosFirebase(){
+
+  datos={historial:[]};
+
+  const snap=await db.collection("expedientes").get();
+
+  snap.forEach(function(doc){
+    datos[doc.id]=doc.data()||{};
+  });
+}
+
+async function cargarHistorialFirebase(){
+
+  try{
+    const snap=await db.collection("historial").limit(500).get();
+
+    const lista=[];
+    snap.forEach(function(doc){
+      const d=doc.data()||{};
+      lista.push({
+        fecha:d.fecha||"",
+        usuario:d.usuario||"",
+        accion:d.accion||"",
+        docente:d.docente||""
+      });
+    });
+
+    datos.historial=lista.reverse();
+  }catch(error){
+    console.warn("No se pudo cargar el historial:",error);
+    datos.historial=[];
+  }
+}
+
+function aplicarPermisos(){
+
+  const botones=document.querySelectorAll(".menu button");
+
+  botones.forEach(function(btn){
+    const txt=btn.textContent.toUpperCase();
+
+    if(!esAdmin() && (
+      txt.includes("USUARIOS") ||
+      txt.includes("HISTORIAL") ||
+      txt.includes("REPORTES")
+    )){
+      btn.style.display="none";
+    }else{
+      btn.style.display="";
+    }
+  });
+
+  if(!esAdmin()){
+    const aviso=document.querySelector("#inicio .aviso");
+    if(aviso){
+      aviso.innerHTML=`
+        <strong>👤 Usuario:</strong> ${esc(sesion.nombre)}
+        <br><br>
+        Acceso limitado al expediente docente asignado.
+        <br><br>
+        Los cambios quedan guardados en Firebase.
+      `;
+    }
+  }
+}
+
+auth.onAuthStateChanged(function(user){
+  if(!user) return;
+
+  // La pantalla de login se mantiene hasta que el usuario pulse iniciar sesión.
+});
+
+
+
+</script>
+</body>
+</html>
