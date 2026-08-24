@@ -4474,20 +4474,25 @@ body{
   font-family:Arial,Helvetica,sans-serif;
   color:#17243a;
   background:#eee;
+  line-height:1.5;
 }
 
 .pagina{
   width:210mm;
-  min-height:297mm;
+  min-height:0;
   padding:18mm;
   margin:0 auto 10mm auto;
   background:white;
   position:relative;
-  page-break-after:always;
+  break-inside:auto;
+  page-break-inside:auto;
+  break-after:auto;
+  page-break-after:auto;
 }
 
-.pagina:last-child{
-  page-break-after:auto;
+.pagina + .pagina{
+  break-before:page;
+  page-break-before:always;
 }
 
 .encabezado{
@@ -4523,21 +4528,47 @@ body{
 
 .portada h1{
   color:#1557a6;
-  font-size:30px;
-  margin:5px 0;
+  font-size:36px;
+  font-weight:800;
+  letter-spacing:1px;
+  margin:8px 0;
+  text-transform:uppercase;
 }
 
 .portada h2{
-  font-size:20px;
-  margin:8px 0;
+  color:#0b3d78;
+  font-size:26px;
+  font-weight:700;
+  letter-spacing:.5px;
+  margin:12px 0;
 }
 
 .portada .institucion{
-  font-size:16px;
+  font-size:19px;
+  line-height:1.5;
   color:#555;
   margin-bottom:25px;
 }
 
+.pensamiento-dario{
+  margin-top:25px;
+  padding:15px 25px;
+  text-align:center;
+  color:#1557a6;
+  font-size:18px;
+  line-height:1.5;
+  font-style:italic;
+  border-top:2px solid #d9b44a;
+  border-bottom:2px solid #d9b44a;
+}
+
+.pensamiento-dario span{
+  display:block;
+  margin-top:8px;
+  font-size:16px;
+  font-weight:bold;
+  font-style:normal;
+}
 .foto-portada{
   width:120px;
   height:150px;
@@ -4690,6 +4721,11 @@ h3{
     <br>
     Sistema de Expedientes Docentes NER 7
   </div>
+  <div class="pensamiento-dario">
+  “Si pequeña es la Patria, uno grande la sueña.”
+  <br>
+  <span>— Rubén Darío</span>
+</div>
 
   ${fotoPortada}
 
