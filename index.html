@@ -608,7 +608,7 @@ MINED · Rancho Grande<br><small style="font-size:11px;">Sistema Firebase NER 7 
 <div id="mensajeLogin"></div>
 
 <label>
-Usuario
+Cédula
 </label>
 
 <input
@@ -616,7 +616,7 @@ id="usuario"
 type="text"
 value="ELIAS"
 autocomplete="username"
-placeholder="Ingrese usuario">
+placeholder="Ingrese número de cédula">
 
 <label>
 Contraseña
@@ -1012,7 +1012,7 @@ Usuario
 
 <input
 id="nuevoUsuario"
-placeholder="Ejemplo: DOCENTE01">
+placeholder="Ejemplo: 447-270586-0001Y">
 
 </div>
 
@@ -1075,7 +1075,7 @@ Director
 class="btn-verde"
 onclick="crearUsuario()">
 
-+ CREAR USUARIO
++ CREAR ACCESO DOCENTE
 
 </button>
 
@@ -1997,9 +1997,25 @@ async function iniciarSesion(){
 
     let email=usuario;
 
+    // ELIAS conserva su acceso actual por correo.
     if(usuario.toUpperCase()==="ELIAS"){
       email=ADMIN_EMAIL;
-    }else if(usuario.includes("@")){
+
+    // Si el docente escribe su cédula, se convierte al correo
+    // interno que usa Firebase Authentication.
+    }else if(!usuario.includes("@")){
+      const docentePorCedula=DOCENTES.find(function(d){
+        return d.cedula.toLowerCase()===usuario.toLowerCase();
+      });
+
+      if(!docentePorCedula){
+        throw new Error("CEDULA_NO_REGISTRADA");
+      }
+
+      email=usuario.toLowerCase().replace(/[^a-z0-9]/g,"")+
+        "@expedientes-docentes-ner7.firebaseapp.com";
+
+    }else{
       email=usuario.toLowerCase();
     }
 
@@ -2132,7 +2148,9 @@ async function iniciarSesion(){
 
       default:
 
-        if(error.message==="NO_PROFILE"){
+        if(error.message==="CEDULA_NO_REGISTRADA"){
+          mensaje="❌ La cédula no está registrada en la lista de docentes.";
+        }else if(error.message==="NO_PROFILE"){
           mensaje="❌ El usuario entró correctamente, pero no tiene un perfil en la colección 'usuarios'.";
         }else if(error.message==="NO_DOCENTE_ASSIGNED"){
           mensaje="❌ La cuenta existe, pero todavía no está vinculada a uno de los 33 docentes.";
@@ -4025,41 +4043,59 @@ async function crearUsuario(){
     return;
   }
 
-  const usuario=document.getElementById("nuevoUsuario").value.trim();
-  const password=document.getElementById("nuevaPassword").value;
+  const cedula=document.getElementById("nuevoUsuario").value.trim();
   const docenteId=document.getElementById("usuarioDocente").value;
   const rol=document.getElementById("nivelAcceso").value;
 
-  if(!usuario || !password){
-    alert("Escriba el correo electrónico y la contraseña.");
+  if(!cedula || !docenteId){
+    alert("Seleccione el docente y escriba su número de cédula.");
     return;
   }
 
-  if(!usuario.includes("@")){
-    alert("⚠️ El usuario debe ser un correo electrónico válido.");
+  const docente=DOCENTES.find(d=>d.id===docenteId);
+
+  if(!docente){
+    alert("❌ No se encontró el docente seleccionado.");
     return;
   }
 
-  if(password.length<6){
-    alert("⚠️ La contraseña debe tener al menos 6 caracteres.");
+  // ELIAS conserva su cuenta de administrador actual.
+  if(docenteId==="D016"){
+    alert("ℹ️ ELIAS ya tiene su acceso de administrador. No se crea otra cuenta.");
     return;
   }
+
+  if(cedula!==docente.cedula){
+    alert("⚠️ La cédula escrita no coincide con la cédula registrada para este docente.");
+    return;
+  }
+
+  const password="123456";
+
+  // Correo interno de Firebase. El docente nunca necesita conocerlo.
+  const emailInterno=cedula.toLowerCase().replace(/[^a-z0-9]/g,"")+
+    "@expedientes-docentes-ner7.firebaseapp.com";
 
   try{
-    // App secundaria: crea el usuario sin cerrar la sesión del administrador.
     const secondaryName="SecondaryAuth_"+Date.now();
     const secondaryApp=firebase.initializeApp(firebaseConfig,secondaryName);
     const secondaryAuth=secondaryApp.auth();
 
-    const cred=await secondaryAuth.createUserWithEmailAndPassword(usuario,password);
+    const cred=await secondaryAuth.createUserWithEmailAndPassword(
+      emailInterno,
+      password
+    );
+
     const nuevoUid=cred.user.uid;
 
     await db.collection("usuarios").doc(nuevoUid).set({
-      usuario:usuario,
-      correo:usuario,
+      usuario:cedula,
+      cedula:cedula,
+      correo:emailInterno,
+      correoInterno:emailInterno,
       docenteId:docenteId,
       rol:rol.toLowerCase(),
-      Nombre:(DOCENTES.find(d=>d.id===docenteId)||{}).nombre||"",
+      Nombre:docente.nombre,
       Activo:true,
       creadoPor:sesion.uid,
       fechaCreacion:new Date().toLocaleString()
@@ -4068,21 +4104,27 @@ async function crearUsuario(){
     await secondaryAuth.signOut();
     await secondaryApp.delete();
 
-    agregarHistorial("Creó usuario "+usuario,docenteId);
+    agregarHistorial("Creó acceso por cédula para "+docente.nombre,docenteId);
 
     mostrarUsuarios();
 
     document.getElementById("nuevoUsuario").value="";
-    document.getElementById("nuevaPassword").value="";
 
-    alert("✅ Usuario creado correctamente.\n\nYa puede iniciar sesión con ese correo y contraseña.");
+    alert(
+      "✅ ACCESO CREADO\n\n"+
+      "Docente: "+docente.nombre+"\n"+
+      "Usuario: "+cedula+"\n"+
+      "Contraseña: 123456\n\n"+
+      "El docente no necesita conocer el correo interno de Firebase."
+    );
 
   }catch(error){
     console.error(error);
 
     let msg=error.message||"No se pudo crear el usuario.";
+
     if(error.code==="auth/email-already-in-use"){
-      msg="Ese correo ya está registrado en Firebase Authentication.";
+      msg="⚠️ Este docente ya tiene una cuenta de acceso creada.";
     }
 
     alert("❌ "+msg);
