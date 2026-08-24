@@ -1995,29 +1995,31 @@ async function iniciarSesion(){
 
   try{
 
-    let email=usuario;
+   let email=usuario.trim();
 
-    // ELIAS conserva su acceso actual por correo.
-    if(usuario.toUpperCase()==="ELIAS"){
-      email=ADMIN_EMAIL;
+// ELIAS conserva su acceso actual por correo.
+if(usuario.toUpperCase()==="ELIAS"){
+    email=ADMIN_EMAIL;
+}
 
-    // Si el docente escribe su cédula, se convierte al correo
-    // interno que usa Firebase Authentication.
-    }else if(!usuario.includes("@")){
-      const docentePorCedula=DOCENTES.find(function(d){
+// Si escribe un correo, lo usa directamente.
+else if(usuario.includes("@")){
+    email=usuario.toLowerCase();
+}
+
+// Si escribe una cédula, busca al docente y genera su correo interno.
+else{
+    const docentePorCedula=DOCENTES.find(function(d){
         return d.cedula.toLowerCase()===usuario.toLowerCase();
-      });
+    });
 
-      if(!docentePorCedula){
+    if(!docentePorCedula){
         throw new Error("CEDULA_NO_REGISTRADA");
-      }
-
-      email=usuario.toLowerCase().replace(/[^a-z0-9]/g,"")+
-        "@expedientes-docentes-ner7.firebaseapp.com";
-
-    }else{
-      email=usuario.toLowerCase();
     }
+
+    email=usuario.toLowerCase().replace(/[^a-z0-9]/g,"")+
+          "@expedientes-docentes-ner7.firebaseapp.com";
+}
 
     // Firebase Authentication comprueba correo y contraseña.
     const cred=await auth.signInWithEmailAndPassword(email,password);
