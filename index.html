@@ -4699,12 +4699,20 @@ h3{
 
 @media print{
 
+  @page{
+    size:A4;
+    margin:18mm;
+  }
+
   body{
     background:white;
   }
 
   .pagina{
+    width:auto;
+    min-height:0;
     margin:0;
+    padding:0;
   }
 
 }
