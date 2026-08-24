@@ -1947,16 +1947,30 @@ async function guardarDatos(){
 
   if(!docenteActual) return;
 
+  // Un docente solamente puede guardar el expediente que su perfil
+  // de Firebase tiene asignado. El administrador puede guardar cualquiera.
+  if(!esAdmin() && sesion.docenteId!==docenteActual.id){
+    alert("❌ No tienes permiso para modificar este expediente.");
+    return;
+  }
+
   try{
     const exp=obtenerExpediente(docenteActual);
+
     await db.collection("expedientes")
       .doc(docenteActual.id)
       .set(exp,{merge:true});
 
     actualizarEstadisticas();
   }catch(error){
-    console.error(error);
-    alert("❌ No se pudo guardar en Firebase. Revisa las reglas de Firestore.");
+    console.error("Error al guardar expediente:",error);
+
+    let mensaje="❌ No se pudo guardar en Firebase.";
+    if(error.code==="permission-denied"){
+      mensaje="❌ Firebase rechazó el guardado. El usuario no está vinculado a este expediente.";
+    }
+
+    alert(mensaje+"\n\nCódigo: "+(error.code||"sin código"));
   }
 }
 
@@ -1980,12 +1994,7 @@ async function iniciarSesion(){
   if(loginBtn) loginBtn.disabled=true;
 
   try{
-    /*
-      ACCESO DEL ADMINISTRADOR
-      Se puede entrar con ELIAS o con su correo.
-      La contraseña NUNCA está guardada en este HTML.
-      Firebase Authentication es quien la verifica.
-    */
+
     let email=usuario;
 
     if(usuario.toUpperCase()==="ELIAS"){
@@ -1994,13 +2003,10 @@ async function iniciarSesion(){
       email=usuario.toLowerCase();
     }
 
+    // Firebase Authentication comprueba correo y contraseña.
     const cred=await auth.signInWithEmailAndPassword(email,password);
     const user=cred.user;
 
-    /*
-      Verificación adicional del administrador.
-      El UID debe coincidir con el usuario ELIAS creado en Firebase.
-    */
     if(user.uid===ADMIN_UID){
 
       sesion={
@@ -2010,6 +2016,10 @@ async function iniciarSesion(){
         docenteId:null,
         nombre:"ELIAS"
       };
+
+      // El administrador sí puede consultar todos los expedientes.
+      await cargarDatosFirebase();
+      await cargarHistorialFirebase();
 
     }else{
 
@@ -2021,6 +2031,7 @@ async function iniciarSesion(){
         nombre:user.email||"USUARIO"
       };
 
+      // El perfil vincula el UID de Firebase con D001...D033.
       const perfilSnap=await db.collection("usuarios").doc(user.uid).get();
 
       if(!perfilSnap.exists){
@@ -2038,14 +2049,20 @@ async function iniciarSesion(){
         perfil.usuario||
         user.email||
         "USUARIO";
-    }
 
-    /*
-      Cargamos la información solamente después de comprobar
-      correctamente la autenticación.
-    */
-    await cargarDatosFirebase();
-    await cargarHistorialFirebase();
+      if(!sesion.docenteId){
+        await auth.signOut();
+        throw new Error("NO_DOCENTE_ASSIGNED");
+      }
+
+      // IMPORTANTE:
+      // El docente NO hace .collection("expedientes").get(),
+      // porque las reglas no permiten leer los 33 expedientes.
+      // Solo se consulta su expediente asignado.
+      await cargarDatosFirebase();
+      datos.historial=[];
+
+    }
 
     document.getElementById("login").classList.add("oculto");
     document.getElementById("sistema").classList.remove("oculto");
@@ -2077,10 +2094,6 @@ async function iniciarSesion(){
 
     let mensaje="❌ No se pudo iniciar sesión.";
 
-    /*
-      Estos mensajes permiten saber exactamente qué está
-      rechazando Firebase, en vez de ocultar el error.
-    */
     switch(error.code){
 
       case "auth/invalid-credential":
@@ -2113,13 +2126,16 @@ async function iniciarSesion(){
         break;
 
       case "permission-denied":
-        mensaje="❌ Firebase Authentication funcionó, pero las reglas de Firestore están bloqueando el acceso.";
+      case "firestore/permission-denied":
+        mensaje="❌ El usuario está autenticado, pero no tiene permiso para consultar el expediente asignado. Revisa las reglas de Firestore.";
         break;
 
       default:
 
         if(error.message==="NO_PROFILE"){
           mensaje="❌ El usuario entró correctamente, pero no tiene un perfil en la colección 'usuarios'.";
+        }else if(error.message==="NO_DOCENTE_ASSIGNED"){
+          mensaje="❌ La cuenta existe, pero todavía no está vinculada a uno de los 33 docentes.";
         }else if(error.message){
           mensaje="❌ Error: "+error.message;
         }
@@ -2139,6 +2155,7 @@ async function iniciarSesion(){
 
   }
 }
+
 
 
 /* ======================================================
@@ -3928,54 +3945,39 @@ function actualizarEstadisticas(){
 let cv=0;
 let fotos=0;
 
+const listaEstadisticas=esAdmin()
+  ? DOCENTES
+  : DOCENTES.filter(function(d){
+      return d.id===sesion.docenteId;
+    });
 
-DOCENTES.forEach(function(docente){
+listaEstadisticas.forEach(function(docente){
 
-const exp=
-obtenerExpediente(docente);
+  const exp=obtenerExpediente(docente);
 
+  if(
+    exp.documentos &&
+    exp.documentos.hojaVida &&
+    exp.documentos.hojaVida.length>0
+  ){
+    cv++;
+  }
 
-if(
-exp.documentos.hojaVida &&
-exp.documentos.hojaVida.length>0
-){
-
-cv++;
-
-}
-
-
-if(exp.foto){
-
-fotos++;
-
-}
+  if(exp.foto){
+    fotos++;
+  }
 
 });
 
+document.getElementById("totalDocentes").textContent=
+  esAdmin() ? DOCENTES.length : listaEstadisticas.length;
 
-document
-.getElementById("totalDocentes")
-.textContent=
-DOCENTES.length;
+document.getElementById("totalActivos").textContent=
+  listaEstadisticas.length;
 
+document.getElementById("totalCV").textContent=cv;
 
-document
-.getElementById("totalActivos")
-.textContent=
-DOCENTES.length;
-
-
-document
-.getElementById("totalCV")
-.textContent=
-cv;
-
-
-document
-.getElementById("totalFotos")
-.textContent=
-fotos;
+document.getElementById("totalFotos").textContent=fotos;
 
 }
 
@@ -4146,11 +4148,39 @@ async function cargarDatosFirebase(){
 
   datos={historial:[]};
 
-  const snap=await db.collection("expedientes").get();
+  if(esAdmin()){
 
-  snap.forEach(function(doc){
-    datos[doc.id]=doc.data()||{};
-  });
+    // Administrador: puede consultar los 33 expedientes.
+    const snap=await db.collection("expedientes").get();
+
+    snap.forEach(function(doc){
+      datos[doc.id]=doc.data()||{};
+    });
+
+  }else{
+
+    // Docente: SOLO consulta el expediente Dxxx que tiene asignado
+    // en la colección usuarios.
+    if(!sesion.docenteId){
+      throw new Error("NO_DOCENTE_ASSIGNED");
+    }
+
+    const ref=db.collection("expedientes").doc(sesion.docenteId);
+    const snap=await ref.get();
+
+    if(snap.exists){
+      datos[sesion.docenteId]=snap.data()||{};
+    }else{
+      // Si todavía no existe, se crea una estructura local vacía.
+      // Se guardará cuando el docente haga su primer cambio.
+      datos[sesion.docenteId]={
+        campos:{},
+        documentos:{},
+        foto:"",
+        actualizado:""
+      };
+    }
+  }
 }
 
 async function cargarHistorialFirebase(){
