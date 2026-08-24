@@ -4757,9 +4757,62 @@ h3{
 
 </section>
 
+<!-- ==========================================
+     PÁGINA 3 - INFORMACIÓN PROFESIONAL
+========================================== -->
 
+<section class="pagina">
+
+  <div class="encabezado">
+    <h1>EXPEDIENTE DOCENTE</h1>
+    <p>Información profesional y trayectoria laboral</p>
+  </div>
+
+  <h2>2. Información profesional</h2>
+
+  <div class="tabla-datos">
+
+    ${dato("Fecha de ingreso",d.ingreso || "")}
+
+  </div>
+
+  <h3>Dirección domiciliaria</h3>
+
+  <div class="observaciones">
+    ${escapeHTML(d.direccion || "No registrada.")}
+  </div>
+
+  <h3>Formación académica</h3>
+
+  <div class="observaciones">
+    ${escapeHTML(d.formacion || "No registrada.")}
+  </div>
+
+  <h3>Experiencia laboral</h3>
+
+  <div class="observaciones">
+    ${escapeHTML(d.experiencia || "No registrada.")}
+  </div>
+
+  <h3>Capacitaciones</h3>
+
+  <div class="observaciones">
+    ${escapeHTML(d.capacitaciones || "No registradas.")}
+  </div>
+
+  <h3>Referencias personales</h3>
+
+  <div class="observaciones">
+    ${escapeHTML(d.referencias || "No registradas.")}
+  </div>
+
+  <div class="pie">
+    EXPEDIENTE DOCENTE · INFORMACIÓN PROFESIONAL
+  </div>
+
+</section>
 <!-- =================================================
-     PÁGINA 3 — DOCUMENTOS
+     PÁGINA 4 — DOCUMENTOS
      ================================================= -->
 
 <section class="pagina">
@@ -4779,7 +4832,7 @@ h3{
 
 
 <!-- =================================================
-     PÁGINA 4 — EVALUACIONES
+     PÁGINA 5 — EVALUACIONES
      ================================================= -->
 
 <section class="pagina">
@@ -4831,7 +4884,7 @@ h3{
 
 
 <!-- =================================================
-     PÁGINA 5 — RÉCORD PROFESIONAL
+     PÁGINA 6 — RÉCORD PROFESIONAL
      ================================================= -->
 
 <section class="pagina">
@@ -4861,7 +4914,7 @@ h3{
 
 
 <!-- =================================================
-     PÁGINA 6 — CIERRE
+     PÁGINA 7 — CIERRE
      ================================================= -->
 
 <section class="pagina portada">
