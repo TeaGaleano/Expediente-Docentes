@@ -1154,10 +1154,9 @@ Esta sección será utilizada para generar:
 </div>
 
 <button
-onclick="alert('Módulo de exportación Excel/PDF en la siguiente etapa.')">
-
-📊 EXPORTAR
-
+id="btnPDFExpediente"
+onclick="generarPDFExpediente()">
+📄 DESCARGAR EXPEDIENTE PDF
 </button>
 
 </div>
@@ -4289,7 +4288,650 @@ auth.onAuthStateChanged(function(user){
 });
 
 
+function generarPDFExpediente(){
 
+  /* =====================================================
+     SEGURIDAD: SOLO ELIAS / ADMINISTRADOR
+     ===================================================== */
+
+  if(!esAdmin()){
+    alert("🔒 Esta función es exclusiva del administrador ELIAS.");
+    return;
+  }
+
+  if(!docenteActual){
+    alert("⚠️ Primero debes abrir el expediente del docente.");
+    return;
+  }
+
+  const exp=obtenerExpediente(docenteActual);
+  const d=obtenerDatosActuales(docenteActual);
+
+  const documentos=exp.documentos||{};
+
+  const escapeHTML=function(valor){
+    return String(valor==null?"":valor)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  };
+
+  const dato=function(etiqueta,valor){
+    return `
+      <div class="dato">
+        <div class="etiqueta">${escapeHTML(etiqueta)}</div>
+        <div class="valor">${escapeHTML(valor||"—")}</div>
+      </div>
+    `;
+  };
+
+  /* =====================================================
+     DOCUMENTOS
+     ===================================================== */
+
+  const nombresDocumentos={
+    hojaVida:"📄 Hoja de Vida",
+    titulo_maestro:"🎓 Título de Maestro / Profesor",
+    titulo_licenciatura:"🎓 Licenciatura",
+    titulo_maestria:"🎓 Maestría",
+    titulo_tecnico:"🎓 Técnico",
+    titulo_otro:"🎓 Otros títulos",
+    cedula_frente:"🪪 Frente de Cédula",
+    cedula_reverso:"🪪 Reverso de Cédula",
+    evaluacion_desempeno:"⭐ Evaluación del desempeño",
+    autoevaluacion:"⭐ Autoevaluación",
+    evaluacion_otra:"⭐ Otras evaluaciones",
+    record_documento:"📋 Récord / Constancia laboral"
+  };
+
+  let bloquesDocumentos="";
+
+  Object.keys(documentos).forEach(function(clave){
+
+    const lista=Array.isArray(documentos[clave])
+      ? documentos[clave]
+      : [];
+
+    if(!lista.length) return;
+
+    bloquesDocumentos+=`
+      <div class="grupo-documento">
+        <h3>
+          ${escapeHTML(
+            nombresDocumentos[clave] ||
+            clave.replace(/_/g," ").toUpperCase()
+          )}
+        </h3>
+    `;
+
+    lista.forEach(function(archivo){
+
+      const nombre=archivo.nombre||"Documento";
+      const tipo=archivo.tipo||"";
+
+      bloquesDocumentos+=`
+        <div class="archivo">
+          <strong>📎 ${escapeHTML(nombre)}</strong>
+          <br>
+          <small>
+            Fecha registrada:
+            ${escapeHTML(archivo.fecha||"—")}
+          </small>
+      `;
+
+      /*
+       * Si es una fotografía, la incluimos
+       * directamente en el expediente.
+       */
+      if(
+        tipo.startsWith("image/") &&
+        archivo.data
+      ){
+
+        bloquesDocumentos+=`
+          <div class="imagen-documento">
+            <img src="${archivo.data}">
+          </div>
+        `;
+      }
+
+      bloquesDocumentos+=`
+        </div>
+      `;
+    });
+
+    bloquesDocumentos+=`
+      </div>
+    `;
+  });
+
+  if(!bloquesDocumentos){
+    bloquesDocumentos=`
+      <div class="sin-datos">
+        No hay documentos registrados actualmente.
+      </div>
+    `;
+  }
+
+  /* =====================================================
+     FOTO DEL DOCENTE
+     ===================================================== */
+
+  const fotoPortada=exp.foto
+    ? `
+      <img
+        class="foto-portada"
+        src="${exp.foto}"
+        alt="Fotografía del docente">
+    `
+    : `
+      <div class="sin-foto">
+        📷<br>
+        Sin fotografía registrada
+      </div>
+    `;
+
+  /* =====================================================
+     OBSERVACIONES / EVALUACIONES
+     ===================================================== */
+
+  const campos=exp.campos||{};
+
+  /* =====================================================
+     GENERAR DOCUMENTO FORMAL
+     ===================================================== */
+
+  const contenido=`
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+Expediente Docente - ${escapeHTML(d.nombre)}
+</title>
+
+<style>
+
+@page{
+  size:A4;
+  margin:0;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:0;
+  font-family:Arial,Helvetica,sans-serif;
+  color:#17243a;
+  background:#eee;
+}
+
+.pagina{
+  width:210mm;
+  min-height:297mm;
+  padding:18mm;
+  margin:0 auto 10mm auto;
+  background:white;
+  position:relative;
+  page-break-after:always;
+}
+
+.pagina:last-child{
+  page-break-after:auto;
+}
+
+.encabezado{
+  border-bottom:3px solid #1557a6;
+  padding-bottom:10px;
+  margin-bottom:20px;
+}
+
+.encabezado h1{
+  margin:0;
+  color:#1557a6;
+  font-size:24px;
+}
+
+.encabezado p{
+  margin:5px 0 0 0;
+  color:#555;
+  font-size:13px;
+}
+
+.portada{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.logo{
+  font-size:70px;
+  margin-bottom:15px;
+}
+
+.portada h1{
+  color:#1557a6;
+  font-size:30px;
+  margin:5px 0;
+}
+
+.portada h2{
+  font-size:20px;
+  margin:8px 0;
+}
+
+.portada .institucion{
+  font-size:16px;
+  color:#555;
+  margin-bottom:25px;
+}
+
+.foto-portada{
+  width:120px;
+  height:150px;
+  object-fit:cover;
+  border:3px solid #1557a6;
+  border-radius:8px;
+  margin:15px;
+}
+
+.sin-foto{
+  width:120px;
+  height:150px;
+  border:2px dashed #aaa;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:#777;
+  margin:15px;
+}
+
+.fecha{
+  margin-top:30px;
+  font-size:13px;
+  color:#666;
+}
+
+h2{
+  color:#1557a6;
+  border-bottom:2px solid #1557a6;
+  padding-bottom:7px;
+}
+
+h3{
+  color:#1557a6;
+  margin-bottom:8px;
+}
+
+.tabla-datos{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.dato{
+  border:1px solid #d9e2ec;
+  border-radius:6px;
+  padding:9px;
+  background:#f8fafc;
+}
+
+.etiqueta{
+  font-size:10px;
+  color:#68778a;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+
+.valor{
+  font-size:13px;
+  font-weight:bold;
+  word-break:break-word;
+}
+
+.grupo-documento{
+  border:1px solid #d9e2ec;
+  border-radius:7px;
+  padding:10px;
+  margin-bottom:12px;
+}
+
+.archivo{
+  padding:8px;
+  margin-top:7px;
+  border-top:1px solid #eee;
+  font-size:12px;
+}
+
+.imagen-documento{
+  text-align:center;
+  margin-top:10px;
+}
+
+.imagen-documento img{
+  max-width:150mm;
+  max-height:150mm;
+  object-fit:contain;
+  border:1px solid #ccc;
+}
+
+.sin-datos{
+  padding:20px;
+  border:1px dashed #aaa;
+  color:#777;
+  text-align:center;
+}
+
+.observaciones{
+  border:1px solid #d9e2ec;
+  background:#f8fafc;
+  padding:15px;
+  min-height:100px;
+  white-space:pre-wrap;
+}
+
+.pie{
+  position:absolute;
+  bottom:10mm;
+  left:18mm;
+  right:18mm;
+  border-top:1px solid #ddd;
+  padding-top:5px;
+  text-align:center;
+  font-size:9px;
+  color:#777;
+}
+
+@media print{
+
+  body{
+    background:white;
+  }
+
+  .pagina{
+    margin:0;
+  }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- =================================================
+     PÁGINA 1 — PORTADA
+     ================================================= -->
+
+<section class="pagina portada">
+
+  <div class="logo">📂</div>
+
+  <h1>EXPEDIENTE DOCENTE</h1>
+
+  <h2>${escapeHTML(d.nombre)}</h2>
+
+  <div class="institucion">
+    MINED · Rancho Grande
+    <br>
+    Sistema de Expedientes Docentes NER 7
+  </div>
+
+  ${fotoPortada}
+
+  <div>
+    <strong>Cédula:</strong>
+    ${escapeHTML(d.cedula||"—")}
+  </div>
+
+  <div class="fecha">
+    Expediente generado por el administrador
+    <br>
+    ${new Date().toLocaleString("es-NI")}
+  </div>
+
+  <div class="pie">
+    EXPEDIENTE DOCENTE · NER 7 · MINED RANCHO GRANDE
+  </div>
+
+</section>
+
+
+<!-- =================================================
+     PÁGINA 2 — DATOS PERSONALES Y LABORALES
+     ================================================= -->
+
+<section class="pagina">
+
+  <div class="encabezado">
+    <h1>EXPEDIENTE DOCENTE</h1>
+    <p>Ficha de información personal y laboral</p>
+  </div>
+
+  <h2>1. Datos del docente</h2>
+
+  <div class="tabla-datos">
+
+    ${dato("Nombre completo",d.nombre)}
+    ${dato("Cédula",d.cedula)}
+    ${dato("Teléfono",d.telefono)}
+    ${dato("Correo",d.correo)}
+    ${dato("Centro educativo",d.centro)}
+    ${dato("Modalidad",d.modalidad)}
+    ${dato("Especialidad",d.especialidad)}
+    ${dato("INSS",d.inss)}
+    ${dato("Código docente",d.codigo)}
+    ${dato("Combinación",d.combinacion)}
+
+  </div>
+
+  <h2>2. Información adicional</h2>
+
+  <div class="observaciones">
+
+    ${escapeHTML(
+      campos.observaciones ||
+      campos.record_observaciones ||
+      "No hay observaciones registradas."
+    )}
+
+  </div>
+
+  <div class="pie">
+    ${escapeHTML(d.nombre)} · Cédula ${escapeHTML(d.cedula||"—")}
+  </div>
+
+</section>
+
+
+<!-- =================================================
+     PÁGINA 3 — DOCUMENTOS
+     ================================================= -->
+
+<section class="pagina">
+
+  <div class="encabezado">
+    <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
+    <p>Documentación registrada en el sistema</p>
+  </div>
+
+  ${bloquesDocumentos}
+
+  <div class="pie">
+    EXPEDIENTE DOCENTE · DOCUMENTOS
+  </div>
+
+</section>
+
+
+<!-- =================================================
+     PÁGINA 4 — EVALUACIONES
+     ================================================= -->
+
+<section class="pagina">
+
+  <div class="encabezado">
+    <h1>EVALUACIONES</h1>
+    <p>Registro de evaluaciones y observaciones</p>
+  </div>
+
+  <h2>Evaluaciones registradas</h2>
+
+  <div class="observaciones">
+
+    ${escapeHTML(
+      campos.evaluacion_notas ||
+      "No hay observaciones o puntajes registrados."
+    )}
+
+  </div>
+
+  <h2>Documento de evaluación</h2>
+
+  ${
+    documentos.evaluacion_desempeno &&
+    documentos.evaluacion_desempeno.length
+    ?
+    documentos.evaluacion_desempeno.map(function(a){
+      return `
+        <div class="archivo">
+          📎 ${escapeHTML(a.nombre||"Evaluación")}
+          <br>
+          <small>
+            ${escapeHTML(a.fecha||"")}
+          </small>
+        </div>
+      `;
+    }).join("")
+    :
+    `<div class="sin-datos">
+      No hay evaluación del desempeño registrada.
+    </div>`
+  }
+
+  <div class="pie">
+    EXPEDIENTE DOCENTE · EVALUACIONES
+  </div>
+
+</section>
+
+
+<!-- =================================================
+     PÁGINA 5 — RÉCORD PROFESIONAL
+     ================================================= -->
+
+<section class="pagina">
+
+  <div class="encabezado">
+    <h1>RÉCORD PROFESIONAL</h1>
+    <p>Información profesional y laboral</p>
+  </div>
+
+  <h2>Historial profesional / observaciones</h2>
+
+  <div class="observaciones">
+
+    ${escapeHTML(
+      campos.record_observaciones ||
+      campos.historial_profesional ||
+      "No hay información registrada."
+    )}
+
+  </div>
+
+  <div class="pie">
+    EXPEDIENTE DOCENTE · RÉCORD PROFESIONAL
+  </div>
+
+</section>
+
+
+<!-- =================================================
+     PÁGINA 6 — CIERRE
+     ================================================= -->
+
+<section class="pagina portada">
+
+  <div class="logo">📁</div>
+
+  <h1>EXPEDIENTE COMPLETO</h1>
+
+  <h2>${escapeHTML(d.nombre)}</h2>
+
+  <p>
+    El presente expediente fue generado desde el
+    Sistema de Expedientes Docentes NER 7.
+  </p>
+
+  <p>
+    MINED · Rancho Grande
+  </p>
+
+  <div class="fecha">
+    ${new Date().toLocaleString("es-NI")}
+  </div>
+
+  <div class="pie">
+    Documento generado exclusivamente por el administrador ELIAS.
+  </div>
+
+</section>
+
+</body>
+</html>
+`;
+
+  /* =====================================================
+     ABRIR VENTANA DE IMPRESIÓN / GUARDAR COMO PDF
+     ===================================================== */
+
+  const ventana=
+    window.open(
+      "",
+      "_blank",
+      "width=1000,height=800"
+    );
+
+  if(!ventana){
+    alert(
+      "⚠️ El navegador bloqueó la ventana del PDF. " +
+      "Permite las ventanas emergentes para este sitio."
+    );
+    return;
+  }
+
+  ventana.document.open();
+  ventana.document.write(contenido);
+  ventana.document.close();
+
+  ventana.onload=function(){
+
+    setTimeout(function(){
+
+      ventana.focus();
+
+      ventana.print();
+
+    },700);
+
+  };
+
+}
+</script>
 </script>
 </body>
 </html>
