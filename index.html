@@ -5059,6 +5059,174 @@ h3{
   padding-top:1px;
 }
 
+
+/* ===== PORTADA PREMIUM A4 — conserva todo el contenido existente ===== */
+.portada{
+  position:relative !important;
+  isolation:isolate;
+  justify-content:flex-start !important;
+  padding:18mm 17mm 18mm !important;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(245,190,55,.10), transparent 25%),
+    linear-gradient(180deg,#ffffff 0%,#fbfdff 100%) !important;
+  border:2.2px solid #123c78 !important;
+  box-shadow:
+    inset 0 0 0 2px #d9b44a,
+    inset 0 0 0 5px #fff,
+    inset 0 0 0 6.5px #123c78 !important;
+}
+
+.portada::before{
+  content:"";
+  position:absolute;
+  inset:7mm;
+  border:1px solid rgba(217,180,74,.75);
+  pointer-events:none;
+  z-index:-1;
+}
+
+.portada::after{
+  content:"✦";
+  position:absolute;
+  top:8mm;
+  left:50%;
+  transform:translateX(-50%);
+  color:#d9b44a;
+  font-size:22px;
+  line-height:1;
+  background:#fff;
+  padding:0 7px;
+}
+
+.portada .logo{
+  font-size:86px !important;
+  line-height:1 !important;
+  margin:5mm 0 4mm !important;
+  filter:drop-shadow(0 3px 2px rgba(18,60,120,.18));
+}
+
+.portada h1{
+  width:100%;
+  color:#1557a6 !important;
+  font-size:40px !important;
+  font-weight:900 !important;
+  line-height:1.08 !important;
+  letter-spacing:1.4px !important;
+  margin:2mm 0 3mm !important;
+  padding:0 0 3mm !important;
+  border-bottom:3px solid #d9b44a !important;
+  text-shadow:0 2px 0 #dbe9f8;
+}
+
+.portada h1::before,
+.portada h1::after{
+  content:"◆";
+  color:#d9b44a;
+  font-size:11px;
+  vertical-align:middle;
+  margin:0 8px;
+}
+
+.portada h2{
+  color:#0b3d78 !important;
+  font-size:27px !important;
+  font-weight:800 !important;
+  line-height:1.35 !important;
+  margin:4mm 0 3mm !important;
+  padding:0 5mm 3mm !important;
+  border-bottom:1px solid #b8cbe0;
+}
+
+.portada .institucion{
+  width:150mm;
+  max-width:100%;
+  margin:3mm 0 4mm !important;
+  padding:5mm 8mm !important;
+  border:2px solid #d9b44a;
+  border-radius:12px;
+  background:linear-gradient(135deg,#f7fbff,#eef5fc);
+  color:#17324d !important;
+  font-size:16px !important;
+  font-weight:600;
+  line-height:1.65 !important;
+  box-shadow:0 2px 8px rgba(18,60,120,.08);
+}
+
+.portada .institucion::before{
+  content:"🏫";
+  display:block;
+  font-size:28px;
+  line-height:1;
+  margin-bottom:2mm;
+}
+
+.portada .pensamiento-dario{
+  width:154mm !important;
+  max-width:100%;
+  margin:3mm 0 4mm !important;
+  padding:4mm 9mm !important;
+  color:#1557a6 !important;
+  font-size:15px !important;
+  line-height:1.65 !important;
+  border-top:2px solid #d9b44a !important;
+  border-bottom:2px solid #d9b44a !important;
+  position:relative;
+}
+
+.portada .pensamiento-dario::before,
+.portada .pensamiento-dario::after{
+  content:"❧";
+  color:#d9b44a;
+  font-size:21px;
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+}
+.portada .pensamiento-dario::before{left:3mm;}
+.portada .pensamiento-dario::after{right:3mm;transform:translateY(-50%) scaleX(-1);}
+
+.portada .pensamiento-dario span{
+  margin-top:2mm !important;
+  font-size:14px !important;
+  color:#0b3d78;
+}
+
+.portada .foto-portada,
+.portada .sin-foto{
+  width:52mm !important;
+  height:62mm !important;
+  margin:3mm auto 2mm !important;
+  border:3px solid #1557a6 !important;
+  border-radius:10px !important;
+  box-shadow:0 3px 12px rgba(18,60,120,.18);
+  object-fit:cover;
+}
+
+.portada > div:not(.logo):not(.institucion):not(.pensamiento-dario):not(.fecha):not(.pie){
+  margin-top:2mm !important;
+  font-size:13px !important;
+  line-height:1.5 !important;
+}
+
+.portada .fecha{
+  margin-top:3mm !important;
+  font-size:12px !important;
+  line-height:1.5 !important;
+  color:#66788b !important;
+}
+
+.portada .pie{
+  left:17mm !important;
+  right:17mm !important;
+  bottom:9mm !important;
+  border-top:2px solid #d9b44a !important;
+  padding-top:3mm !important;
+  font-size:9px !important;
+  color:#1557a6 !important;
+  font-weight:700;
+  letter-spacing:.4px;
+}
+
 /* Los títulos conservan su jerarquía visual */
 .pagina h1,
 .pagina h2,
