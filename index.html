@@ -1423,6 +1423,8 @@ type="file"
 class="oculto">
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
@@ -5106,7 +5108,12 @@ h3{
   }
 
   if(modo === "descargar"){
-    if(typeof html2pdf === "undefined"){
+    if(typeof html2canvas === "undefined"){
+      alert("⚠️ No se cargó el generador de imágenes PDF. Recarga la página y vuelve a intentarlo.");
+      return;
+    }
+
+    if(typeof window.jspdf === "undefined" || !window.jspdf.jsPDF){
       alert("⚠️ No se cargó el generador PDF. Recarga la página y vuelve a intentarlo.");
       return;
     }
@@ -5118,6 +5125,7 @@ h3{
     marco.style.width="210mm";
     marco.style.height="297mm";
     marco.style.border="0";
+    marco.setAttribute("aria-hidden","true");
     document.body.appendChild(marco);
 
     const docMarco=marco.contentDocument || marco.contentWindow.document;
@@ -5133,43 +5141,93 @@ h3{
         .replace(/^-+|-+$/g,"")+
       ".pdf";
 
-    const esperarImagenes=function(){
+    const esperarRecursos=function(){
       const imagenes=Array.from(docMarco.images||[]);
-      if(!imagenes.length) return Promise.resolve();
-      return Promise.all(imagenes.map(function(img){
-        if(img.complete) return Promise.resolve();
+      const promesas=imagenes.map(function(img){
+        if(img.complete && img.naturalWidth>0) return Promise.resolve();
         return new Promise(function(resolve){
           img.addEventListener("load",resolve,{once:true});
           img.addEventListener("error",resolve,{once:true});
-          setTimeout(resolve,8000);
+          setTimeout(resolve,10000);
         });
-      }));
+      });
+
+      const fuentes = docMarco.fonts && docMarco.fonts.ready
+        ? docMarco.fonts.ready
+        : Promise.resolve();
+
+      return Promise.all([fuentes, ...promesas]);
     };
 
     const ejecutar=function(){
-      esperarImagenes().then(function(){
-        return html2pdf().set({
-          margin:0,
-          filename:nombreArchivo,
-          image:{type:"jpeg",quality:0.98},
-          html2canvas:{
-            scale:1.5,
-            useCORS:true,
-            allowTaint:true,
-            backgroundColor:"#ffffff",
-            imageTimeout:15000,
-            logging:false
-          },
-          jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
-          pagebreak:{mode:["css"]}
-        }).from(docMarco.body).save();
-      }).then(function(){
-        marco.remove();
-      }).catch(function(error){
-        console.error("PDF:",error);
-        marco.remove();
-        alert("❌ No se pudo generar el PDF. Revisa la conexión a Internet e inténtalo nuevamente.");
-      });
+      esperarRecursos()
+        .then(function(){
+          return new Promise(function(resolve){
+            setTimeout(resolve,300);
+          });
+        })
+        .then(function(){
+          const paginas=Array.from(docMarco.querySelectorAll(".pagina"));
+
+          if(!paginas.length){
+            throw new Error("No se encontraron páginas del expediente.");
+          }
+
+          const pdf=new window.jspdf.jsPDF({
+            unit:"mm",
+            format:"a4",
+            orientation:"portrait",
+            compress:true
+          });
+
+          let trabajos=Promise.resolve();
+
+          paginas.forEach(function(pagina,index){
+            trabajos=trabajos.then(function(){
+              // Forzar dimensiones exactas A4 para el render.
+              pagina.style.width="210mm";
+              pagina.style.height="297mm";
+              pagina.style.minHeight="297mm";
+              pagina.style.margin="0";
+              pagina.style.boxSizing="border-box";
+              pagina.style.background="#ffffff";
+
+              return html2canvas(pagina,{
+                scale:2,
+                useCORS:true,
+                allowTaint:true,
+                backgroundColor:"#ffffff",
+                logging:false,
+                width:pagina.scrollWidth,
+                height:pagina.scrollHeight,
+                windowWidth:pagina.scrollWidth,
+                windowHeight:pagina.scrollHeight
+              }).then(function(canvas){
+                if(index>0){
+                  pdf.addPage("a4","portrait");
+                }
+
+                const imagen=canvas.toDataURL("image/jpeg",0.96);
+                pdf.addImage(imagen,"JPEG",0,0,210,297,undefined,"FAST");
+              });
+            });
+          });
+
+          return trabajos.then(function(){
+            pdf.save(nombreArchivo);
+          });
+        })
+        .then(function(){
+          marco.remove();
+        })
+        .catch(function(error){
+          console.error("PDF:",error);
+          marco.remove();
+          alert(
+            "❌ No se pudo generar el PDF correctamente. " +
+            (error && error.message ? error.message : "Revisa la conexión a Internet.")
+          );
+        });
     };
 
     setTimeout(ejecutar,500);
