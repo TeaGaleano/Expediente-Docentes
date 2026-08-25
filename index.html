@@ -4348,10 +4348,6 @@ auth.onAuthStateChanged(function(user){
 
 function generarPDFExpediente(modo="imprimir"){
 
-  /* =====================================================
-     SEGURIDAD: SOLO ELIAS / ADMINISTRADOR
-     ===================================================== */
-
   if(!esAdmin()){
     alert("🔒 Esta función es exclusiva del administrador ELIAS.");
     return;
@@ -4364,7 +4360,6 @@ function generarPDFExpediente(modo="imprimir"){
 
   const exp=obtenerExpediente(docenteActual);
   const d=obtenerDatosActuales(docenteActual);
-
   const documentos=exp.documentos||{};
 
   const escapeHTML=function(valor){
@@ -4381,13 +4376,8 @@ function generarPDFExpediente(modo="imprimir"){
       <div class="dato">
         <div class="etiqueta">${escapeHTML(etiqueta)}</div>
         <div class="valor">${escapeHTML(valor||"—")}</div>
-      </div>
-    `;
+      </div>`;
   };
-
-  /* =====================================================
-     DOCUMENTOS
-     ===================================================== */
 
   const nombresDocumentos={
     hojaVida:"📄 Hoja de Vida",
@@ -4404,116 +4394,118 @@ function generarPDFExpediente(modo="imprimir"){
     record_documento:"📋 Récord / Constancia laboral"
   };
 
-  let bloquesDocumentos="";
-
-  Object.keys(documentos).forEach(function(clave){
-
-    const lista=Array.isArray(documentos[clave])
-      ? documentos[clave]
-      : [];
-
-    if(!lista.length) return;
-
-    bloquesDocumentos+=`
-      <div class="grupo-documento">
-        <h3>
-          ${escapeHTML(
-            nombresDocumentos[clave] ||
-            clave.replace(/_/g," ").toUpperCase()
-          )}
-        </h3>
-    `;
-
-    lista.forEach(function(archivo){
-
-      const nombre=archivo.nombre||"Documento";
-      const tipo=archivo.tipo||"";
-
-      bloquesDocumentos+=`
-        <div class="archivo">
-          <strong>📎 ${escapeHTML(nombre)}</strong>
-          <br>
-          <small>
-            Fecha registrada:
-            ${escapeHTML(archivo.fecha||"—")}
-          </small>
-      `;
-
-      /*
-       * Si es una fotografía, la incluimos
-       * directamente en el expediente.
-       */
-      if(
-        tipo.startsWith("image/") &&
-        archivo.data
-      ){
-
-        bloquesDocumentos+=`
-          <div class="imagen-documento">
-            <img src="${archivo.data}">
-          </div>
-        `;
-      }
-
-      bloquesDocumentos+=`
-        </div>
-      `;
-    });
-
-    bloquesDocumentos+=`
-      </div>
-    `;
-  });
-
-  if(!bloquesDocumentos){
-    bloquesDocumentos=`
-      <div class="sin-datos">
-        No hay documentos registrados actualmente.
-      </div>
-    `;
-  }
-
-  /* =====================================================
-     FOTO DEL DOCENTE
-     ===================================================== */
-
-  const fotoPortada=exp.foto
-    ? `
-      <img
-        class="foto-portada"
-        src="${exp.foto}"
-        alt="Fotografía del docente">
-    `
-    : `
-      <div class="sin-foto">
-        📷<br>
-        Sin fotografía registrada
-      </div>
-    `;
-
-  /* =====================================================
-     OBSERVACIONES / EVALUACIONES
-     ===================================================== */
-
   const campos=exp.campos||{};
 
-  /* =====================================================
-     GENERAR DOCUMENTO FORMAL
-     ===================================================== */
+  /*
+   * Cada documento se convierte en una tarjeta limpia.
+   * NO mostramos nombre del archivo ni fecha de subida:
+   * en el PDF solamente aparece el nombre formal del documento.
+   */
+  const grupos=[];
+  Object.keys(documentos).forEach(function(clave){
+    const lista=Array.isArray(documentos[clave]) ? documentos[clave] : [];
+    if(!lista.length) return;
+
+    grupos.push({
+      clave:clave,
+      titulo:nombresDocumentos[clave] || clave.replace(/_/g," ").toUpperCase(),
+      archivos:lista
+    });
+  });
+
+  const renderArchivo=function(archivo,clave){
+    const tipo=archivo.tipo||"";
+    const esImagen=tipo.startsWith("image/") && archivo.data;
+    const esCedula=/cedula/i.test(clave);
+
+    if(esImagen){
+      return `
+        <div class="archivo-limpio">
+          <div class="${esCedula ? "marco-cedula" : "marco-imagen"}">
+            <img
+              src="${archivo.data}"
+              class="${esCedula ? "foto-cedula" : "foto-documento"}"
+              data-cedula="${esCedula ? "1" : "0"}"
+              alt="">
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="archivo-texto">
+        <div class="archivo-titulo">📎 Documento registrado</div>
+      </div>`;
+  };
+
+  /*
+   * Máximo 2 documentos visuales por hoja. Así ninguna tarjeta
+   * puede cruzar el margen ni quedar debajo del pie de página.
+   */
+  let paginasDocumentos="";
+  if(!grupos.length){
+
+    paginasDocumentos=`
+      <section class="pagina pagina-documentos">
+        <div class="encabezado">
+          <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
+          <p>Documentación registrada en el sistema</p>
+        </div>
+        <div class="sin-datos">No hay documentos registrados actualmente.</div>
+        <div class="pie">EXPEDIENTE DOCENTE · DOCUMENTOS</div>
+      </section>`;
+
+  }else{
+
+    grupos.forEach(function(grupo){
+
+      const archivos=grupo.archivos;
+
+      for(let inicio=0; inicio<archivos.length; inicio+=2){
+
+        const parte=archivos.slice(inicio,inicio+2);
+
+        paginasDocumentos+=`
+          <section class="pagina pagina-documentos">
+
+            <div class="encabezado">
+              <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
+              <p>${escapeHTML(grupo.titulo)}</p>
+            </div>
+
+            <div class="documentos-hoja">
+              ${parte.map(function(a){
+                return renderArchivo(a,grupo.clave);
+              }).join("")}
+            </div>
+
+            <div class="pie">
+              ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
+            </div>
+
+          </section>`;
+      }
+    });
+  }
+
+  const fotoPortada=exp.foto
+    ? `<img class="foto-portada" src="${exp.foto}" alt="Fotografía del docente">`
+    : `<div class="sin-foto">📷<br>Sin fotografía registrada</div>`;
+
+  const nombreArchivo="Expediente-"+
+    String(d.nombre||"Docente")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-zA-Z0-9]+/g,"-")
+      .replace(/^-+|-+$/g,"")+
+    ".pdf";
 
   const contenido=`
 
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
 <meta charset="UTF-8">
-
-<title>
-Expediente Docente - ${escapeHTML(d.nombre)}
-</title>
+<title>Expediente Docente - ${escapeHTML(d.nombre)}</title>
 
 <style>
 
@@ -4536,23 +4528,22 @@ html,body{
 body{
   font-family:Arial,Helvetica,sans-serif;
   color:#17243a;
-  line-height:1.5;
+  line-height:1.45;
+  font-size:12px;
 }
 
 .pagina{
   width:210mm;
-  min-height:297mm;
   height:297mm;
-  padding:18mm;
-  box-sizing:border-box;
+  min-height:297mm;
+  max-height:297mm;
+  padding:16mm 17mm 19mm 17mm;
   margin:0;
   background:#fff;
   position:relative;
   overflow:hidden;
   break-inside:avoid;
   page-break-inside:avoid;
-  break-before:auto;
-  page-break-before:auto;
   break-after:page;
   page-break-after:always;
 }
@@ -4562,28 +4553,23 @@ body{
   page-break-after:auto;
 }
 
-.portada{
-  min-height:297mm;
-  height:297mm;
-  justify-content:center;
-}
-
 .encabezado{
-  border-bottom:3px solid #1557a6;
-  padding-bottom:10px;
-  margin-bottom:20px;
+  border-bottom:2px solid #1557a6;
+  padding-bottom:7px;
+  margin-bottom:12px;
 }
 
 .encabezado h1{
   margin:0;
   color:#1557a6;
-  font-size:24px;
+  font-size:21px;
+  line-height:1.15;
 }
 
 .encabezado p{
-  margin:5px 0 0 0;
-  color:#555;
-  font-size:13px;
+  margin:4px 0 0;
+  color:#68778a;
+  font-size:11px;
 }
 
 .portada{
@@ -4595,152 +4581,236 @@ body{
 }
 
 .logo{
-  font-size:70px;
-  margin-bottom:15px;
+  font-size:58px;
+  margin-bottom:8px;
 }
 
 .portada h1{
   color:#1557a6;
-  font-size:36px;
+  font-size:31px;
   font-weight:800;
-  letter-spacing:1px;
-  margin:8px 0;
-  text-transform:uppercase;
+  letter-spacing:.7px;
+  margin:5px 0;
 }
 
 .portada h2{
   color:#0b3d78;
-  font-size:26px;
-  font-weight:700;
-  letter-spacing:.5px;
-  margin:12px 0;
+  font-size:22px;
+  margin:8px 0;
 }
 
 .portada .institucion{
-  font-size:19px;
-  line-height:1.5;
+  font-size:14px;
+  line-height:1.4;
   color:#555;
-  margin-bottom:25px;
+  margin-bottom:13px;
 }
 
 .pensamiento-dario{
-  margin-top:25px;
-  padding:15px 25px;
-  text-align:center;
+  width:150mm;
+  margin:8px 0;
+  padding:9px 15px;
   color:#1557a6;
-  font-size:18px;
-  line-height:1.5;
+  font-size:13px;
+  line-height:1.35;
   font-style:italic;
-  border-top:2px solid #d9b44a;
-  border-bottom:2px solid #d9b44a;
+  border-top:1px solid #d9b44a;
+  border-bottom:1px solid #d9b44a;
 }
 
 .pensamiento-dario span{
   display:block;
-  margin-top:8px;
-  font-size:16px;
+  margin-top:5px;
+  font-size:12px;
   font-weight:bold;
   font-style:normal;
 }
+
 .foto-portada{
-  width:190px;
-  height:240px;
+  width:58mm;
+  height:72mm;
   object-fit:cover;
-  border:3px solid #1557a6;
-  border-radius:10px;
-  margin:20px;
+  border:2px solid #1557a6;
+  border-radius:7px;
+  margin:10px;
 }
 
 .sin-foto{
-  width:120px;
-  height:150px;
+  width:58mm;
+  height:72mm;
   border:2px dashed #aaa;
   display:flex;
   align-items:center;
   justify-content:center;
   text-align:center;
   color:#777;
-  margin:15px;
+  margin:10px;
 }
 
 .fecha{
-  margin-top:30px;
-  font-size:13px;
+  margin-top:12px;
+  font-size:10px;
   color:#666;
 }
 
 h2{
   color:#1557a6;
-  border-bottom:2px solid #1557a6;
-  padding-bottom:7px;
+  border-bottom:1.5px solid #1557a6;
+  padding-bottom:5px;
+  margin:10px 0;
+  font-size:17px;
 }
 
 h3{
   color:#1557a6;
-  margin-bottom:8px;
+  margin:8px 0 5px;
+  font-size:14px;
 }
 
 .tabla-datos{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px;
+  gap:7px;
 }
 
 .dato{
   border:1px solid #d9e2ec;
   border-radius:6px;
-  padding:9px;
+  padding:7px 8px;
   background:#f8fafc;
+  min-height:42px;
 }
 
 .etiqueta{
-  font-size:10px;
+  font-size:8px;
   color:#68778a;
   text-transform:uppercase;
-  margin-bottom:4px;
+  margin-bottom:2px;
 }
 
 .valor{
-  font-size:13px;
+  font-size:11px;
   font-weight:bold;
   word-break:break-word;
 }
 
-.grupo-documento{
+.observaciones{
   border:1px solid #d9e2ec;
   border-radius:7px;
+  background:#f8fafc;
   padding:10px;
-  margin-bottom:12px;
+  min-height:58px;
+  white-space:pre-wrap;
+  overflow:hidden;
 }
 
-.archivo{
-  padding:12px 10px;
-  margin-top:15px;
-  margin-bottom:15px;
-  border-top:1px solid #eee;
+.profesional-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:9px;
+}
+
+.profesional-box{
+  border:1px solid #d9e2ec;
+  border-radius:7px;
+  background:#f8fafc;
+  padding:9px 10px;
+  min-height:62px;
+  overflow:hidden;
+}
+
+.profesional-box strong{
+  display:block;
+  color:#1557a6;
   font-size:12px;
-  page-break-inside:avoid;
-  break-inside:avoid;
+  margin-bottom:4px;
 }
 
-.imagen-documento{
-  text-align:center;
-  margin-top:18px;
-  margin-bottom:18px;
-  padding:10px 0;
-  page-break-inside:avoid;
-  break-inside:avoid;
+.profesional-box div{
+  font-size:11px;
+  white-space:pre-wrap;
+  overflow:hidden;
 }
 
-.imagen-documento img{
-  max-width:165mm;
-  max-height:105mm;
+.documentos-hoja{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.archivo-limpio{
+  width:100%;
+  height:108mm;
+  border:1px solid #d9e2ec;
+  border-radius:8px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding:7mm;
+}
+
+.marco-imagen{
+  width:100%;
+  height:94mm;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.marco-cedula{
+  width:100%;
+  height:82mm;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.foto-documento{
+  display:block;
+  max-width:100%;
+  max-height:100%;
   width:auto;
   height:auto;
   object-fit:contain;
-  border:1px solid #ccc;
+}
+
+.foto-cedula{
   display:block;
-  margin:0 auto;
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+}
+
+.foto-cedula.vertical{
+  width:72mm;
+  height:150mm;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  transform:rotate(90deg);
+}
+
+.archivo-texto{
+  height:35mm;
+  border:1px solid #d9e2ec;
+  border-radius:8px;
+  background:#f8fafc;
+  display:flex;
+  align-items:center;
+  padding:12px;
+}
+
+.archivo-titulo{
+  font-weight:bold;
+  color:#1557a6;
+  font-size:12px;
 }
 
 .sin-datos{
@@ -4748,26 +4818,20 @@ h3{
   border:1px dashed #aaa;
   color:#777;
   text-align:center;
-}
-
-.observaciones{
-  border:1px solid #d9e2ec;
-  background:#f8fafc;
-  padding:15px;
-  min-height:100px;
-  white-space:pre-wrap;
+  border-radius:8px;
 }
 
 .pie{
   position:absolute;
-  bottom:10mm;
-  left:18mm;
-  right:18mm;
-  border-top:1px solid #ddd;
-  padding-top:5px;
+  bottom:8mm;
+  left:17mm;
+  right:17mm;
+  border-top:1px solid #d9e2ec;
+  padding-top:4px;
   text-align:center;
-  font-size:9px;
-  color:#777;
+  font-size:8px;
+  color:#7b8794;
+  background:#fff;
 }
 
 @media print{
@@ -4786,13 +4850,12 @@ h3{
 
   .pagina{
     width:210mm;
-    min-height:297mm;
     height:297mm;
+    min-height:297mm;
+    max-height:297mm;
+    overflow:hidden;
     margin:0;
-    padding:18mm;
-    box-sizing:border-box;
-    break-before:auto;
-    page-break-before:auto;
+    padding:16mm 17mm 19mm 17mm;
     break-after:page;
     page-break-after:always;
   }
@@ -4801,18 +4864,12 @@ h3{
     break-after:auto;
     page-break-after:auto;
   }
-
 }
 
 </style>
-
 </head>
 
 <body>
-
-<!-- =================================================
-     PÁGINA 1 — PORTADA
-     ================================================= -->
 
 <section class="pagina portada">
 
@@ -4827,17 +4884,17 @@ h3{
     <br>
     Sistema de Expedientes Docentes NER 7
   </div>
+
   <div class="pensamiento-dario">
-  “Si pequeña es la Patria, uno grande la sueña.”
-  <br>
-  <span>— Rubén Darío</span>
-</div>
+    “Si pequeña es la Patria, uno grande la sueña.”
+    <br>
+    <span>— Rubén Darío</span>
+  </div>
 
   ${fotoPortada}
 
   <div>
-    <strong>Cédula:</strong>
-    ${escapeHTML(d.cedula||"—")}
+    <strong>Cédula:</strong> ${escapeHTML(d.cedula||"—")}
   </div>
 
   <div class="fecha">
@@ -4852,11 +4909,6 @@ h3{
 
 </section>
 
-
-<!-- =================================================
-     PÁGINA 2 — DATOS PERSONALES Y LABORALES
-     ================================================= -->
-
 <section class="pagina">
 
   <div class="encabezado">
@@ -4867,7 +4919,6 @@ h3{
   <h2>1. Datos del docente</h2>
 
   <div class="tabla-datos">
-
     ${dato("Nombre completo",d.nombre)}
     ${dato("Cédula",d.cedula)}
     ${dato("Teléfono",d.telefono)}
@@ -4878,19 +4929,16 @@ h3{
     ${dato("INSS",d.inss)}
     ${dato("Código docente",d.codigo)}
     ${dato("Combinación",d.combinacion)}
-
   </div>
 
   <h2>2. Información adicional</h2>
 
   <div class="observaciones">
-
     ${escapeHTML(
       campos.observaciones ||
       campos.record_observaciones ||
       "No hay observaciones registradas."
     )}
-
   </div>
 
   <div class="pie">
@@ -4899,10 +4947,6 @@ h3{
 
 </section>
 
-<!-- ==========================================
-     PÁGINA 3 - INFORMACIÓN PROFESIONAL
-========================================== -->
-
 <section class="pagina">
 
   <div class="encabezado">
@@ -4910,42 +4954,29 @@ h3{
     <p>Información profesional y trayectoria laboral</p>
   </div>
 
-  <h2>2. Información profesional</h2>
+  <h2>3. Información profesional</h2>
 
   <div class="tabla-datos">
-
-    ${dato("Fecha de ingreso",d.ingreso || "")}
-
+    ${dato("Fecha de ingreso",d.ingreso||"")}
   </div>
 
-  <h3>Dirección domiciliaria</h3>
+  <div class="profesional-grid">
 
-  <div class="observaciones">
-    ${escapeHTML(d.direccion || "No registrada.")}
-  </div>
+    <div class="profesional-box">
+      <strong>Dirección domiciliaria</strong>
+      <div>${escapeHTML(d.direccion||"No registrada.")}</div>
+    </div>
 
-  <h3>Formación académica</h3>
+    <div class="profesional-box">
+      <strong>Formación académica</strong>
+      <div>${escapeHTML(d.formacion||"No registrada.")}</div>
+    </div>
 
-  <div class="observaciones">
-    ${escapeHTML(d.formacion || "No registrada.")}
-  </div>
+    <div class="profesional-box">
+      <strong>Experiencia laboral</strong>
+      <div>${escapeHTML(d.experiencia||"No registrada.")}</div>
+    </div>
 
-  <h3>Experiencia laboral</h3>
-
-  <div class="observaciones">
-    ${escapeHTML(d.experiencia || "No registrada.")}
-  </div>
-
-  <h3>Capacitaciones</h3>
-
-  <div class="observaciones">
-    ${escapeHTML(d.capacitaciones || "No registradas.")}
-  </div>
-
-  <h3>Referencias personales</h3>
-
-  <div class="observaciones">
-    ${escapeHTML(d.referencias || "No registradas.")}
   </div>
 
   <div class="pie">
@@ -4953,29 +4984,44 @@ h3{
   </div>
 
 </section>
-<!-- =================================================
-     PÁGINA 4 — DOCUMENTOS
-     ================================================= -->
 
 <section class="pagina">
 
   <div class="encabezado">
-    <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
-    <p>Documentación registrada en el sistema</p>
+    <h1>EXPEDIENTE DOCENTE</h1>
+    <p>Información profesional complementaria</p>
   </div>
 
-  ${bloquesDocumentos}
+  <div class="profesional-grid">
+
+    <div class="profesional-box">
+      <strong>Capacitaciones</strong>
+      <div>${escapeHTML(d.capacitaciones||"No registradas.")}</div>
+    </div>
+
+    <div class="profesional-box">
+      <strong>Referencias personales</strong>
+      <div>${escapeHTML(d.referencias||"No registradas.")}</div>
+    </div>
+
+  </div>
+
+  <h2>Observaciones</h2>
+
+  <div class="observaciones">
+    ${escapeHTML(
+      campos.record_observaciones ||
+      "No hay observaciones registradas."
+    )}
+  </div>
 
   <div class="pie">
-    EXPEDIENTE DOCENTE · DOCUMENTOS
+    EXPEDIENTE DOCENTE · INFORMACIÓN COMPLEMENTARIA
   </div>
 
 </section>
 
-
-<!-- =================================================
-     PÁGINA 5 — EVALUACIONES
-     ================================================= -->
+${paginasDocumentos}
 
 <section class="pagina">
 
@@ -4987,12 +5033,10 @@ h3{
   <h2>Evaluaciones registradas</h2>
 
   <div class="observaciones">
-
     ${escapeHTML(
       campos.evaluacion_notas ||
       "No hay observaciones o puntajes registrados."
     )}
-
   </div>
 
   <h2>Documento de evaluación</h2>
@@ -5001,21 +5045,11 @@ h3{
     documentos.evaluacion_desempeno &&
     documentos.evaluacion_desempeno.length
     ?
-    documentos.evaluacion_desempeno.map(function(a){
-      return `
-        <div class="archivo">
-          📎 ${escapeHTML(a.nombre||"Evaluación")}
-          <br>
-          <small>
-            ${escapeHTML(a.fecha||"")}
-          </small>
-        </div>
-      `;
-    }).join("")
-    :
-    `<div class="sin-datos">
-      No hay evaluación del desempeño registrada.
+    `<div class="archivo-texto">
+      <div class="archivo-titulo">📎 Evaluación del desempeño registrada</div>
     </div>`
+    :
+    `<div class="sin-datos">No hay evaluación del desempeño registrada.</div>`
   }
 
   <div class="pie">
@@ -5023,11 +5057,6 @@ h3{
   </div>
 
 </section>
-
-
-<!-- =================================================
-     PÁGINA 6 — RÉCORD PROFESIONAL
-     ================================================= -->
 
 <section class="pagina">
 
@@ -5039,13 +5068,11 @@ h3{
   <h2>Historial profesional / observaciones</h2>
 
   <div class="observaciones">
-
     ${escapeHTML(
       campos.record_observaciones ||
       campos.historial_profesional ||
       "No hay información registrada."
     )}
-
   </div>
 
   <div class="pie">
@@ -5053,11 +5080,6 @@ h3{
   </div>
 
 </section>
-
-
-<!-- =================================================
-     PÁGINA 7 — CIERRE
-     ================================================= -->
 
 <section class="pagina portada">
 
@@ -5072,13 +5094,9 @@ h3{
     Sistema de Expedientes Docentes NER 7.
   </p>
 
-  <p>
-    MINED · Rancho Grande
-  </p>
+  <p>MINED · Rancho Grande</p>
 
-  <div class="fecha">
-    ${new Date().toLocaleString("es-NI")}
-  </div>
+  <div class="fecha">${new Date().toLocaleString("es-NI")}</div>
 
   <div class="pie">
     Documento generado exclusivamente por el administrador ELIAS.
@@ -5091,30 +5109,27 @@ h3{
 `;
 
   /* =====================================================
-     ABRIR / DESCARGAR / IMPRIMIR
+     PREPARAR PDF RASTERIZADO A4
      ===================================================== */
 
-  if(modo === "abrir"){
-    const ventana=window.open("","_blank","width=1000,height=800");
-    if(!ventana){
+  const generarPDFComoImagen=function(abrirDespues,imprimirDespues){
+
+    if(typeof html2canvas==="undefined"){
+      alert("⚠️ No se cargó html2canvas. Recarga la página y vuelve a intentarlo.");
+      return;
+    }
+
+    if(typeof window.jspdf==="undefined" || !window.jspdf.jsPDF){
+      alert("⚠️ No se cargó jsPDF. Recarga la página y vuelve a intentarlo.");
+      return;
+    }
+
+    const ventana=abrirDespues || imprimirDespues
+      ? window.open("","_blank","width=1000,height=800")
+      : null;
+
+    if((abrirDespues || imprimirDespues) && !ventana){
       alert("⚠️ Chrome bloqueó la ventana. Permite las ventanas emergentes para este sitio.");
-      return;
-    }
-    ventana.document.open();
-    ventana.document.write(contenido);
-    ventana.document.close();
-    ventana.focus();
-    return;
-  }
-
-  if(modo === "descargar"){
-    if(typeof html2canvas === "undefined"){
-      alert("⚠️ No se cargó el generador de imágenes PDF. Recarga la página y vuelve a intentarlo.");
-      return;
-    }
-
-    if(typeof window.jspdf === "undefined" || !window.jspdf.jsPDF){
-      alert("⚠️ No se cargó el generador PDF. Recarga la página y vuelve a intentarlo.");
       return;
     }
 
@@ -5122,8 +5137,8 @@ h3{
     marco.style.position="fixed";
     marco.style.left="-20000px";
     marco.style.top="0";
-    marco.style.width="210mm";
-    marco.style.height="297mm";
+    marco.style.width="794px";
+    marco.style.height="1123px";
     marco.style.border="0";
     marco.setAttribute("aria-hidden","true");
     document.body.appendChild(marco);
@@ -5133,153 +5148,203 @@ h3{
     docMarco.write(contenido);
     docMarco.close();
 
-    const nombreArchivo="Expediente-"+
-      String(d.nombre||"Docente")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")
-        .replace(/[^a-zA-Z0-9]+/g,"-")
-        .replace(/^-+|-+$/g,"")+
-      ".pdf";
-
     const esperarRecursos=function(){
+
       const imagenes=Array.from(docMarco.images||[]);
+
       const promesas=imagenes.map(function(img){
-        if(img.complete && img.naturalWidth>0) return Promise.resolve();
+
         return new Promise(function(resolve){
+
+          if(img.complete && img.naturalWidth>0){
+            resolve();
+            return;
+          }
+
           img.addEventListener("load",resolve,{once:true});
           img.addEventListener("error",resolve,{once:true});
+
           setTimeout(resolve,10000);
         });
       });
 
-      const fuentes = docMarco.fonts && docMarco.fonts.ready
+      const fuentes=docMarco.fonts && docMarco.fonts.ready
         ? docMarco.fonts.ready
         : Promise.resolve();
 
-      return Promise.all([fuentes, ...promesas]);
+      return Promise.all([fuentes,...promesas]);
     };
 
-    const ejecutar=function(){
-      esperarRecursos()
-        .then(function(){
-          return new Promise(function(resolve){
-            setTimeout(resolve,300);
-          });
-        })
-        .then(function(){
-          const paginas=Array.from(docMarco.querySelectorAll(".pagina"));
+    const normalizarFotos=function(){
 
-          if(!paginas.length){
-            throw new Error("No se encontraron páginas del expediente.");
-          }
+      const fotos=Array.from(docMarco.querySelectorAll(".foto-cedula"));
 
-          const pdf=new window.jspdf.jsPDF({
-            unit:"mm",
-            format:"a4",
-            orientation:"portrait",
-            compress:true
-          });
+      fotos.forEach(function(img){
 
-          let trabajos=Promise.resolve();
+        if(
+          img.naturalHeight > img.naturalWidth * 1.08
+        ){
+          img.classList.add("vertical");
+        }
+      });
+    };
 
-          paginas.forEach(function(pagina,index){
-            trabajos=trabajos.then(function(){
-              /*
-               * DESCARGA PDF: renderizar CADA .pagina como una hoja A4
-               * fija en píxeles. Esto evita que Chrome/html2canvas vuelva
-               * a interpretar los mm y termine partiendo fotografías o
-               * la portada entre varias hojas al abrir el PDF descargado.
-               * 794 x 1123 px ≈ A4 a 96 dpi.
-               */
-              pagina.style.width="794px";
-              pagina.style.height="1123px";
-              pagina.style.minHeight="1123px";
-              pagina.style.maxHeight="1123px";
-              pagina.style.margin="0";
-              pagina.style.padding="68px";
-              pagina.style.boxSizing="border-box";
-              pagina.style.overflow="hidden";
-              pagina.style.background="#ffffff";
+    esperarRecursos()
+      .then(function(){
 
-              return html2canvas(pagina,{
-                scale:2,
-                useCORS:true,
-                allowTaint:true,
-                backgroundColor:"#ffffff",
-                logging:false,
-                width:794,
-                height:1123,
-                windowWidth:794,
-                windowHeight:1123,
-                scrollX:0,
-                scrollY:0
-              }).then(function(canvas){
-                if(index>0){
-                  pdf.addPage("a4","portrait");
-                }
+        normalizarFotos();
 
-                const imagen=canvas.toDataURL("image/jpeg",0.96);
-                pdf.addImage(imagen,"JPEG",0,0,210,297,undefined,"FAST");
-              });
+        return new Promise(function(resolve){
+          setTimeout(resolve,350);
+        });
+
+      })
+      .then(function(){
+
+        const paginas=Array.from(docMarco.querySelectorAll(".pagina"));
+
+        if(!paginas.length){
+          throw new Error("No se encontraron páginas del expediente.");
+        }
+
+        const pdf=new window.jspdf.jsPDF({
+          unit:"mm",
+          format:"a4",
+          orientation:"portrait",
+          compress:true
+        });
+
+        let trabajos=Promise.resolve();
+
+        paginas.forEach(function(pagina,index){
+
+          trabajos=trabajos.then(function(){
+
+            /*
+             * 794 × 1123 px = hoja A4 aproximada a 96 DPI.
+             * Todo se rasteriza dentro de una sola hoja.
+             */
+            pagina.style.width="794px";
+            pagina.style.height="1123px";
+            pagina.style.minHeight="1123px";
+            pagina.style.maxHeight="1123px";
+            pagina.style.margin="0";
+            pagina.style.padding="60px 64px 72px 64px";
+            pagina.style.boxSizing="border-box";
+            pagina.style.overflow="hidden";
+            pagina.style.background="#ffffff";
+
+            return html2canvas(pagina,{
+              scale:2,
+              useCORS:true,
+              allowTaint:true,
+              backgroundColor:"#ffffff",
+              logging:false,
+              width:794,
+              height:1123,
+              windowWidth:794,
+              windowHeight:1123,
+              scrollX:0,
+              scrollY:0
+            }).then(function(canvas){
+
+              if(index>0){
+                pdf.addPage("a4","portrait");
+              }
+
+              const imagen=canvas.toDataURL("image/jpeg",0.97);
+
+              pdf.addImage(
+                imagen,
+                "JPEG",
+                0,
+                0,
+                210,
+                297,
+                undefined,
+                "FAST"
+              );
             });
           });
-
-          return trabajos.then(function(){
-            pdf.save(nombreArchivo);
-          });
-        })
-        .then(function(){
-          marco.remove();
-        })
-        .catch(function(error){
-          console.error("PDF:",error);
-          marco.remove();
-          alert(
-            "❌ No se pudo generar el PDF correctamente. " +
-            (error && error.message ? error.message : "Revisa la conexión a Internet.")
-          );
         });
-    };
 
-    setTimeout(ejecutar,500);
-    return;
-  }
+        return trabajos.then(function(){
 
-  /* IMPRIMIR */
-  const ventana=window.open("","_blank","width=1000,height=800");
-  if(!ventana){
-    alert("⚠️ Chrome bloqueó la ventana de impresión. Permite ventanas emergentes para este sitio.");
-    return;
-  }
-  ventana.document.open();
-  ventana.document.write(contenido);
-  ventana.document.close();
+          if(abrirDespues){
 
-  const imprimir= function(){
-    ventana.focus();
-    ventana.print();
-  };
+            const blob=pdf.output("blob");
+            const url=URL.createObjectURL(blob);
 
-  const esperarImpresion=function(){
-    const imagenes=Array.from(ventana.document.images||[]);
-    if(!imagenes.length){
-      setTimeout(imprimir,500);
-      return;
-    }
-    Promise.all(imagenes.map(function(img){
-      if(img.complete) return Promise.resolve();
-      return new Promise(function(resolve){
-        img.addEventListener("load",resolve,{once:true});
-        img.addEventListener("error",resolve,{once:true});
-        setTimeout(resolve,8000);
+            ventana.location.href=url;
+
+            setTimeout(function(){
+              try{
+                ventana.focus();
+              }catch(e){}
+            },800);
+
+            return;
+          }
+
+          if(imprimirDespues){
+
+            const blob=pdf.output("blob");
+            const url=URL.createObjectURL(blob);
+
+            ventana.location.href=url;
+
+            /*
+             * El visor PDF de Chrome controla la impresión.
+             * Dejamos el PDF abierto exactamente como se generó,
+             * sin volver a maquetarlo con HTML.
+             */
+            setTimeout(function(){
+              try{
+                ventana.focus();
+              }catch(e){}
+            },1000);
+
+            return;
+          }
+
+          pdf.save(nombreArchivo);
+
+        });
+
+      })
+      .catch(function(error){
+
+        console.error("PDF:",error);
+
+        if(ventana){
+          try{ ventana.close(); }catch(e){}
+        }
+
+        alert(
+          "❌ No se pudo generar el PDF correctamente. "+
+          (error && error.message ? error.message : "")
+        );
+
+      })
+      .finally(function(){
+        marco.remove();
       });
-    })).then(function(){
-      setTimeout(imprimir,300);
-    });
   };
 
-  setTimeout(esperarImpresion,300);
+  if(modo==="abrir"){
+    generarPDFComoImagen(true,false);
+    return;
+  }
 
+  if(modo==="descargar"){
+    generarPDFComoImagen(false,false);
+    return;
+  }
+
+  if(modo==="imprimir"){
+    generarPDFComoImagen(false,true);
+    return;
+  }
 }
 
 function mostrarReportesDocentes(){
