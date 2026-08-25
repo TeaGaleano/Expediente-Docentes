@@ -1130,34 +1130,21 @@ class="seccion">
 
 <div class="aviso">
 
-Esta sección será utilizada para generar:
+<h3>📄 Expedientes de docentes</h3>
 
-<br><br>
+<div class="buscador">
 
-📊 Reportes de docentes
-
-<br>
-📄 PDF de expedientes
-
-<br>
-📗 Excel
-
-<br>
-📋 Reportes por centro
-
-<br>
-🎓 Reportes por modalidad
-
-<br>
-⭐ Reportes de evaluaciones
+  <input
+    type="text"
+    id="buscarReporteDocente"
+    oninput="mostrarReportesDocentes()"
+    placeholder="🔎 Buscar nombre, cédula, centro..."
+  >
 
 </div>
 
-<button
-id="btnPDFExpediente"
-onclick="generarPDFExpediente()">
-📄 DESCARGAR EXPEDIENTE PDF
-</button>
+<div id="listaReportesDocentes"></div>
+
 
 </div>
 
@@ -2212,6 +2199,9 @@ document
 
 if(id==="docentes")
 mostrarDocentes();
+     
+if(id==="reportes")
+mostrarReportesDocentes();
 
 if(id==="usuarios")
 cargarUsuarios();
@@ -5037,6 +5027,126 @@ h3{
     },700);
 
   };
+
+     
+}function mostrarReportesDocentes(){
+
+  if(!esAdmin()){
+    return;
+  }
+
+  const busqueda =
+    (document.getElementById("buscarReporteDocente")?.value || "")
+    .toLowerCase()
+    .trim();
+
+  const lista = DOCENTES
+    .map(function(docente){
+      return obtenerDatosActuales(docente);
+    })
+    .filter(function(d){
+
+      const texto = (
+        (d.nombre || "") + " " +
+        (d.cedula || "") + " " +
+        (d.centro || "") + " " +
+        (d.modalidad || "") + " " +
+        (d.especialidad || "")
+      ).toLowerCase();
+
+      return !busqueda || texto.includes(busqueda);
+    });
+
+  const contenedor =
+    document.getElementById("listaReportesDocentes");
+
+  if(!contenedor) return;
+
+  contenedor.innerHTML = lista.map(function(d){
+
+    return `
+      <div class="reporte-docente">
+
+        <div class="reporte-info">
+
+          <strong>${escapeHTML(d.nombre || "")}</strong>
+
+          <div>
+            <small>
+              Cédula: ${escapeHTML(d.cedula || "-")}
+            </small>
+          </div>
+
+          <div>
+            <small>
+              Centro: ${escapeHTML(d.centro || "-")}
+            </small>
+          </div>
+
+        </div>
+
+        <div class="reporte-acciones">
+
+          <button
+            onclick="descargarPDFReporte('${d.id}')">
+            📄 DESCARGAR PDF
+          </button>
+
+          <button
+            onclick="imprimirPDFReporte('${d.id}')">
+            🖨️ IMPRIMIR
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
+
+}
+
+
+function prepararReporteDocente(id){
+
+  if(!esAdmin()){
+    alert("🔒 Esta función es exclusiva del administrador ELÍAS.");
+    return false;
+  }
+
+  const docente = DOCENTES.find(function(d){
+    return d.id === id;
+  });
+
+  if(!docente){
+    alert("Docente no encontrado.");
+    return false;
+  }
+
+  docenteActual = docente;
+
+  return true;
+}
+
+
+function descargarPDFReporte(id){
+
+  if(!prepararReporteDocente(id)){
+    return;
+  }
+
+  generarPDFExpediente();
+
+}
+
+
+function imprimirPDFReporte(id){
+
+  if(!prepararReporteDocente(id)){
+    return;
+  }
+
+  generarPDFExpediente();
 
 }
 </script>
