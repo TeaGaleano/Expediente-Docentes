@@ -5184,12 +5184,21 @@ h3{
 
           paginas.forEach(function(pagina,index){
             trabajos=trabajos.then(function(){
-              // Forzar dimensiones exactas A4 para el render.
-              pagina.style.width="210mm";
-              pagina.style.height="297mm";
-              pagina.style.minHeight="297mm";
+              /*
+               * DESCARGA PDF: renderizar CADA .pagina como una hoja A4
+               * fija en píxeles. Esto evita que Chrome/html2canvas vuelva
+               * a interpretar los mm y termine partiendo fotografías o
+               * la portada entre varias hojas al abrir el PDF descargado.
+               * 794 x 1123 px ≈ A4 a 96 dpi.
+               */
+              pagina.style.width="794px";
+              pagina.style.height="1123px";
+              pagina.style.minHeight="1123px";
+              pagina.style.maxHeight="1123px";
               pagina.style.margin="0";
+              pagina.style.padding="68px";
               pagina.style.boxSizing="border-box";
+              pagina.style.overflow="hidden";
               pagina.style.background="#ffffff";
 
               return html2canvas(pagina,{
@@ -5198,10 +5207,12 @@ h3{
                 allowTaint:true,
                 backgroundColor:"#ffffff",
                 logging:false,
-                width:pagina.scrollWidth,
-                height:pagina.scrollHeight,
-                windowWidth:pagina.scrollWidth,
-                windowHeight:pagina.scrollHeight
+                width:794,
+                height:1123,
+                windowWidth:794,
+                windowHeight:1123,
+                scrollX:0,
+                scrollY:0
               }).then(function(canvas){
                 if(index>0){
                   pdf.addPage("a4","portrait");
