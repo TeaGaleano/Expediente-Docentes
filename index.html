@@ -9,7 +9,7 @@
 :root{
 --azul:#1557a6;
 --azul2:#0878ff;
---azul3:#123c78;F
+--azul3:#123c78;
 --fondo:#eef4fb;
 --blanco:#fff;
 --texto:#17324d;
@@ -525,6 +525,71 @@ margin:8px 0;
 
 .historial-item strong{
 color:var(--azul3);
+}
+
+/* REPORTES */
+
+.reporte-docente{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:18px;
+padding:16px 18px;
+margin:10px 0;
+background:#fff;
+border:1px solid var(--borde);
+border-radius:12px;
+box-shadow:0 2px 10px rgba(23,50,77,.05);
+}
+
+.reporte-docente:hover{
+box-shadow:0 5px 18px rgba(23,50,77,.10);
+}
+
+.reporte-info{
+flex:1;
+min-width:0;
+}
+
+.reporte-info strong{
+display:block;
+font-size:16px;
+color:var(--azul3);
+margin-bottom:5px;
+}
+
+.reporte-info small{
+color:var(--gris);
+}
+
+.reporte-acciones{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+justify-content:flex-end;
+}
+
+.reporte-acciones button{
+white-space:nowrap;
+}
+
+.reporte-acciones button:first-child{
+background:var(--verde);
+}
+
+.reporte-acciones button:last-child{
+background:var(--azul3);
+}
+
+@media(max-width:700px){
+.reporte-docente{
+flex-direction:column;
+align-items:flex-start;
+}
+.reporte-acciones{
+width:100%;
+justify-content:flex-start;
+}
 }
 
 /* RESPONSIVE */
@@ -1358,6 +1423,7 @@ type="file"
 class="oculto">
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
@@ -4278,7 +4344,7 @@ auth.onAuthStateChanged(function(user){
 });
 
 
-function generarPDFExpediente(){
+function generarPDFExpediente(modo="imprimir"){
 
   /* =====================================================
      SEGURIDAD: SOLO ELIAS / ADMINISTRADOR
@@ -4469,8 +4535,10 @@ body{
 
 .pagina{
   width:210mm;
-  min-height:0;
+  min-height:297mm;
+  height:297mm;
   padding:18mm;
+  box-sizing:border-box;
   margin:0 auto 10mm auto;
   background:white;
   position:relative;
@@ -4483,6 +4551,12 @@ body{
 .pagina + .pagina{
   break-before:page;
   page-break-before:always;
+}
+
+.portada{
+  min-height:297mm;
+  height:297mm;
+  justify-content:center;
 }
 
 .encabezado{
@@ -4691,7 +4765,7 @@ h3{
 
   @page{
     size:A4;
-    margin:18mm;
+    margin:0;
   }
 
   body{
@@ -4699,10 +4773,12 @@ h3{
   }
 
   .pagina{
-    width:auto;
-    min-height:0;
+    width:210mm;
+    min-height:297mm;
+    height:297mm;
     margin:0;
-    padding:0;
+    padding:18mm;
+    box-sizing:border-box;
   }
 
 }
@@ -4994,172 +5070,212 @@ h3{
 `;
 
   /* =====================================================
-     ABRIR VENTANA DE IMPRESIÓN / GUARDAR COMO PDF
+     ABRIR / DESCARGAR / IMPRIMIR
      ===================================================== */
 
-  const ventana=
-    window.open(
-      "",
-      "_blank",
-      "width=1000,height=800"
-    );
-
-  if(!ventana){
-    alert(
-      "⚠️ El navegador bloqueó la ventana del PDF. " +
-      "Permite las ventanas emergentes para este sitio."
-    );
+  if(modo === "abrir"){
+    const ventana=window.open("","_blank","width=1000,height=800");
+    if(!ventana){
+      alert("⚠️ Chrome bloqueó la ventana. Permite las ventanas emergentes para este sitio.");
+      return;
+    }
+    ventana.document.open();
+    ventana.document.write(contenido);
+    ventana.document.close();
+    ventana.focus();
     return;
   }
 
+  if(modo === "descargar"){
+    if(typeof html2pdf === "undefined"){
+      alert("⚠️ No se cargó el generador PDF. Recarga la página y vuelve a intentarlo.");
+      return;
+    }
+
+    const marco=document.createElement("iframe");
+    marco.style.position="fixed";
+    marco.style.left="-20000px";
+    marco.style.top="0";
+    marco.style.width="210mm";
+    marco.style.height="297mm";
+    marco.style.border="0";
+    document.body.appendChild(marco);
+
+    const docMarco=marco.contentDocument || marco.contentWindow.document;
+    docMarco.open();
+    docMarco.write(contenido);
+    docMarco.close();
+
+    const nombreArchivo="Expediente-"+
+      String(d.nombre||"Docente")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .replace(/[^a-zA-Z0-9]+/g,"-")
+        .replace(/^-+|-+$/g,"")+
+      ".pdf";
+
+    const ejecutar=function(){
+      html2pdf().set({
+        margin:0,
+        filename:nombreArchivo,
+        image:{type:"jpeg",quality:0.98},
+        html2canvas:{scale:2,useCORS:true,allowTaint:true,backgroundColor:"#fff"},
+        jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+        pagebreak:{mode:["css","legacy"]}
+      }).from(docMarco.body).save().then(function(){
+        marco.remove();
+      }).catch(function(error){
+        console.error("PDF:",error);
+        marco.remove();
+        alert("❌ No se pudo generar el PDF. Revisa la consola del navegador.");
+      });
+    };
+
+    setTimeout(ejecutar,800);
+    return;
+  }
+
+  /* IMPRIMIR */
+  const ventana=window.open("","_blank","width=1000,height=800");
+  if(!ventana){
+    alert("⚠️ Chrome bloqueó la ventana de impresión. Permite ventanas emergentes para este sitio.");
+    return;
+  }
   ventana.document.open();
   ventana.document.write(contenido);
   ventana.document.close();
+  setTimeout(function(){
+    ventana.focus();
+    ventana.print();
+  },900);
 
-  ventana.onload=function(){
+}
 
-    setTimeout(function(){
-
-      ventana.focus();
-
-      ventana.print();
-
-    },700);
-
-  };
-
-     
-}function mostrarReportesDocentes(){
+function mostrarReportesDocentes(){
 
   if(!esAdmin()){
     return;
   }
 
-  const buscar =
-    (document.getElementById("buscarReporteDocente")?.value || "")
-    .toLowerCase()
-    .trim();
+  const contenedor=document.getElementById("listaReportesDocentes");
+  if(!contenedor) return;
 
-  const textoSeguro = function(valor){
-    return String(valor ?? "")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
+  const buscar=String(document.getElementById("buscarReporteDocente")?.value||"")
+    .toLowerCase().trim();
+
+  const lista=DOCENTES.map(function(docente){
+    return obtenerDatosActuales(docente);
+  }).filter(function(d){
+    const texto=(String(d.nombre||"")+" "+String(d.cedula||"")+" "+String(d.centro||"")+" "+String(d.modalidad||"")+" "+String(d.especialidad||"")).toLowerCase();
+    return !buscar || texto.includes(buscar);
+  });
+
+  const seguro=function(v){
+    return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   };
 
-  const lista = DOCENTES
-    .map(function(docente){
-      return obtenerDatosActuales(docente);
-    })
-    .filter(function(d){
-
-      const texto = (
-        String(d.nombre || "") + " " +
-        String(d.cedula || "") + " " +
-        String(d.centro || "") + " " +
-        String(d.modalidad || "") + " " +
-        String(d.especialidad || "")
-      ).toLowerCase();
-
-      return !buscar || texto.includes(buscar);
-    });
-
-  const contenedor =
-    document.getElementById("listaReportesDocentes");
-
-  if(!contenedor){
+  if(!lista.length){
+    contenedor.innerHTML='<div style="padding:25px;text-align:center;font-weight:bold;color:#666">No se encontraron docentes.</div>';
     return;
   }
 
-  contenedor.innerHTML = lista.map(function(d){
-
+  contenedor.innerHTML=lista.map(function(d){
+    const id=seguro(d.id);
     return `
       <div class="reporte-docente">
-
         <div class="reporte-info">
-
-          <strong>${textoSeguro(d.nombre || "")}</strong>
-
-          <div>
-            <small>
-              Cédula: ${textoSeguro(d.cedula || "-")}
-            </small>
-          </div>
-
-          <div>
-            <small>
-              Centro: ${textoSeguro(d.centro || "-")}
-            </small>
-          </div>
-
+          <strong>${seguro(d.nombre||"")}</strong>
+          <div><small>Cédula: ${seguro(d.cedula||"-")}</small></div>
+          <div><small>Centro: ${seguro(d.centro||"-")}</small></div>
         </div>
-
         <div class="reporte-acciones">
-
-          <button
-            type="button"
-            onclick="descargarPDFReporte('${d.id}')">
-            📄 DESCARGAR PDF
-          </button>
-
-          <button
-            type="button"
-            onclick="imprimirPDFReporte('${d.id}')">
-            🖨️ IMPRIMIR
-          </button>
-
+          <button type="button" class="btn-reporte-abrir" data-reporte-id="${id}">📂 ABRIR</button>
+          <button type="button" class="btn-reporte-descargar" data-reporte-id="${id}">📄 DESCARGAR PDF</button>
+          <button type="button" class="btn-reporte-imprimir" data-reporte-id="${id}">🖨️ IMPRIMIR</button>
         </div>
-
-      </div>
-    `;
-
+      </div>`;
   }).join("");
 
+  // Acciones de reportes mediante listeners reales (sin onclick inline).
+  // Esto evita que el navegador o una política de seguridad bloquee los botones.
+  contenedor.querySelectorAll(".btn-reporte-abrir").forEach(function(btn){
+    btn.addEventListener("click", function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      const id=this.getAttribute("data-reporte-id");
+      abrirPDFReporte(id);
+    });
+  });
+
+  contenedor.querySelectorAll(".btn-reporte-descargar").forEach(function(btn){
+    btn.addEventListener("click", function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      const id=this.getAttribute("data-reporte-id");
+      descargarPDFReporte(id);
+    });
+  });
+
+  contenedor.querySelectorAll(".btn-reporte-imprimir").forEach(function(btn){
+    btn.addEventListener("click", function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      imprimirPDFReporte(this.getAttribute("data-reporte-id"));
+    });
+  });
 }
+
 function prepararReporteDocente(id){
   if(!esAdmin()){
     alert("🔒 Esta función es exclusiva del administrador ELÍAS.");
     return false;
   }
 
-  const docente = DOCENTES.find(function(d){
-    return d.id === id;
-  });
-
+  const docente=DOCENTES.find(function(d){ return String(d.id)===String(id); });
   if(!docente){
-    alert("Docente no encontrado.");
+    alert("❌ No se encontró el docente seleccionado.");
     return false;
   }
 
-  docenteActual = docente;
-
+  docenteActual=docente;
   return true;
 }
 
+function abrirPDFReporte(id){
+  if(!prepararReporteDocente(id)) return;
+  try{
+    generarPDFExpediente("abrir");
+  }catch(error){
+    console.error("ABRIR REPORTE:",error);
+    alert("❌ No se pudo abrir el expediente: "+(error.message||error));
+  }
+}
 
 function descargarPDFReporte(id){
-
-  if(!prepararReporteDocente(id)){
-    return;
+  if(!prepararReporteDocente(id)) return;
+  try{
+    generarPDFExpediente("descargar");
+  }catch(error){
+    console.error("DESCARGAR REPORTE:",error);
+    alert("❌ No se pudo descargar el PDF: "+(error.message||error));
   }
-
-  generarPDFExpediente();
-
 }
-
 
 function imprimirPDFReporte(id){
-
-  if(!prepararReporteDocente(id)){
-    return;
+  if(!prepararReporteDocente(id)) return;
+  try{
+    generarPDFExpediente("imprimir");
+  }catch(error){
+    console.error("IMPRIMIR REPORTE:",error);
+    alert("❌ No se pudo abrir la impresión: "+(error.message||error));
   }
-
-  generarPDFExpediente();
-
 }
-</script>
+
+// Garantiza que las funciones estén disponibles aunque el navegador
+// trate el script con un contexto distinto.
+window.abrirPDFReporte=abrirPDFReporte;
+window.descargarPDFReporte=descargarPDFReporte;
+window.imprimirPDFReporte=imprimirPDFReporte;
 </script>
 </body>
 </html>
