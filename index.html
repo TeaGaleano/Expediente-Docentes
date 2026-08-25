@@ -4524,12 +4524,16 @@ Expediente Docente - ${escapeHTML(d.nombre)}
   box-sizing:border-box;
 }
 
-body{
+html,body{
   margin:0;
   padding:0;
+  width:210mm;
+  background:#fff;
+}
+
+body{
   font-family:Arial,Helvetica,sans-serif;
   color:#17243a;
-  background:#eee;
   line-height:1.5;
 }
 
@@ -4539,18 +4543,21 @@ body{
   height:297mm;
   padding:18mm;
   box-sizing:border-box;
-  margin:0 auto 10mm auto;
-  background:white;
+  margin:0;
+  background:#fff;
   position:relative;
-  break-inside:auto;
-  page-break-inside:auto;
-  break-after:auto;
-  page-break-after:auto;
+  overflow:hidden;
+  break-inside:avoid;
+  page-break-inside:avoid;
+  break-before:auto;
+  page-break-before:auto;
+  break-after:page;
+  page-break-after:always;
 }
 
-.pagina + .pagina{
-  break-before:page;
-  page-break-before:always;
+.pagina:last-of-type{
+  break-after:auto;
+  page-break-after:auto;
 }
 
 .portada{
@@ -4768,8 +4775,11 @@ h3{
     margin:0;
   }
 
-  body{
-    background:white;
+  html,body{
+    width:210mm;
+    margin:0;
+    padding:0;
+    background:#fff;
   }
 
   .pagina{
@@ -4779,6 +4789,15 @@ h3{
     margin:0;
     padding:18mm;
     box-sizing:border-box;
+    break-before:auto;
+    page-break-before:auto;
+    break-after:page;
+    page-break-after:always;
+  }
+
+  .pagina:last-of-type{
+    break-after:auto;
+    page-break-after:auto;
   }
 
 }
@@ -5114,24 +5133,46 @@ h3{
         .replace(/^-+|-+$/g,"")+
       ".pdf";
 
+    const esperarImagenes=function(){
+      const imagenes=Array.from(docMarco.images||[]);
+      if(!imagenes.length) return Promise.resolve();
+      return Promise.all(imagenes.map(function(img){
+        if(img.complete) return Promise.resolve();
+        return new Promise(function(resolve){
+          img.addEventListener("load",resolve,{once:true});
+          img.addEventListener("error",resolve,{once:true});
+          setTimeout(resolve,8000);
+        });
+      }));
+    };
+
     const ejecutar=function(){
-      html2pdf().set({
-        margin:0,
-        filename:nombreArchivo,
-        image:{type:"jpeg",quality:0.98},
-        html2canvas:{scale:2,useCORS:true,allowTaint:true,backgroundColor:"#fff"},
-        jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
-        pagebreak:{mode:["css","legacy"]}
-      }).from(docMarco.body).save().then(function(){
+      esperarImagenes().then(function(){
+        return html2pdf().set({
+          margin:0,
+          filename:nombreArchivo,
+          image:{type:"jpeg",quality:0.98},
+          html2canvas:{
+            scale:1.5,
+            useCORS:true,
+            allowTaint:true,
+            backgroundColor:"#ffffff",
+            imageTimeout:15000,
+            logging:false
+          },
+          jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+          pagebreak:{mode:["css"]}
+        }).from(docMarco.body).save();
+      }).then(function(){
         marco.remove();
       }).catch(function(error){
         console.error("PDF:",error);
         marco.remove();
-        alert("❌ No se pudo generar el PDF. Revisa la consola del navegador.");
+        alert("❌ No se pudo generar el PDF. Revisa la conexión a Internet e inténtalo nuevamente.");
       });
     };
 
-    setTimeout(ejecutar,800);
+    setTimeout(ejecutar,500);
     return;
   }
 
@@ -5144,10 +5185,31 @@ h3{
   ventana.document.open();
   ventana.document.write(contenido);
   ventana.document.close();
-  setTimeout(function(){
+
+  const imprimir= function(){
     ventana.focus();
     ventana.print();
-  },900);
+  };
+
+  const esperarImpresion=function(){
+    const imagenes=Array.from(ventana.document.images||[]);
+    if(!imagenes.length){
+      setTimeout(imprimir,500);
+      return;
+    }
+    Promise.all(imagenes.map(function(img){
+      if(img.complete) return Promise.resolve();
+      return new Promise(function(resolve){
+        img.addEventListener("load",resolve,{once:true});
+        img.addEventListener("error",resolve,{once:true});
+        setTimeout(resolve,8000);
+      });
+    })).then(function(){
+      setTimeout(imprimir,300);
+    });
+  };
+
+  setTimeout(esperarImpresion,300);
 
 }
 
@@ -5189,40 +5251,12 @@ function mostrarReportesDocentes(){
           <div><small>Centro: ${seguro(d.centro||"-")}</small></div>
         </div>
         <div class="reporte-acciones">
-          <button type="button" class="btn-reporte-abrir" data-reporte-id="${id}">📂 ABRIR</button>
-          <button type="button" class="btn-reporte-descargar" data-reporte-id="${id}">📄 DESCARGAR PDF</button>
-          <button type="button" class="btn-reporte-imprimir" data-reporte-id="${id}">🖨️ IMPRIMIR</button>
+          <button type="button" onclick="abrirPDFReporte('${id}')">📂 ABRIR</button>
+          <button type="button" onclick="descargarPDFReporte('${id}')">📄 DESCARGAR PDF</button>
+          <button type="button" onclick="imprimirPDFReporte('${id}')">🖨️ IMPRIMIR</button>
         </div>
       </div>`;
   }).join("");
-
-  // Acciones de reportes mediante listeners reales (sin onclick inline).
-  // Esto evita que el navegador o una política de seguridad bloquee los botones.
-  contenedor.querySelectorAll(".btn-reporte-abrir").forEach(function(btn){
-    btn.addEventListener("click", function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      const id=this.getAttribute("data-reporte-id");
-      abrirPDFReporte(id);
-    });
-  });
-
-  contenedor.querySelectorAll(".btn-reporte-descargar").forEach(function(btn){
-    btn.addEventListener("click", function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      const id=this.getAttribute("data-reporte-id");
-      descargarPDFReporte(id);
-    });
-  });
-
-  contenedor.querySelectorAll(".btn-reporte-imprimir").forEach(function(btn){
-    btn.addEventListener("click", function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      imprimirPDFReporte(this.getAttribute("data-reporte-id"));
-    });
-  });
 }
 
 function prepararReporteDocente(id){
@@ -5243,39 +5277,36 @@ function prepararReporteDocente(id){
 
 function abrirPDFReporte(id){
   if(!prepararReporteDocente(id)) return;
+
   try{
     generarPDFExpediente("abrir");
   }catch(error){
-    console.error("ABRIR REPORTE:",error);
+    console.error(error);
     alert("❌ No se pudo abrir el expediente: "+(error.message||error));
   }
 }
 
 function descargarPDFReporte(id){
   if(!prepararReporteDocente(id)) return;
+
   try{
     generarPDFExpediente("descargar");
   }catch(error){
-    console.error("DESCARGAR REPORTE:",error);
+    console.error(error);
     alert("❌ No se pudo descargar el PDF: "+(error.message||error));
   }
 }
 
 function imprimirPDFReporte(id){
   if(!prepararReporteDocente(id)) return;
+
   try{
     generarPDFExpediente("imprimir");
   }catch(error){
-    console.error("IMPRIMIR REPORTE:",error);
+    console.error(error);
     alert("❌ No se pudo abrir la impresión: "+(error.message||error));
   }
 }
-
-// Garantiza que las funciones estén disponibles aunque el navegador
-// trate el script con un contexto distinto.
-window.abrirPDFReporte=abrirPDFReporte;
-window.descargarPDFReporte=descargarPDFReporte;
-window.imprimirPDFReporte=imprimirPDFReporte;
 </script>
 </body>
 </html>
