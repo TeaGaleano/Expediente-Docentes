@@ -580,7 +580,6 @@ grid-template-columns:1fr;
 
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -4058,7 +4057,7 @@ async function crearUsuario(){
   }
 
   if(cedula!==docente.cedula){
-    alert("⚠️ La cédula escrita no coincide con la cédula registrada en el sistema.");
+    alert("⚠️ La cédula escrita no coincide con la cédula registrada para este docente.");
     return;
   }
 
@@ -4279,7 +4278,8 @@ auth.onAuthStateChanged(function(user){
 });
 
 
-function generarPDFExpediente(descargar=null){
+function generarPDFExpediente(){
+
   /* =====================================================
      SEGURIDAD: SOLO ELIAS / ADMINISTRADOR
      ===================================================== */
@@ -4438,7 +4438,7 @@ function generarPDFExpediente(descargar=null){
 <!DOCTYPE html>
 
 <html lang="es">
-    
+
 <head>
 
 <meta charset="UTF-8">
@@ -4935,7 +4935,7 @@ h3{
 <section class="pagina">
 
   <div class="encabezado">
-    <h1>RÉCORD DE POLICIA</h1>
+    <h1>RÉCORD PROFESIONAL</h1>
     <p>Información profesional y laboral</p>
   </div>
 
@@ -4972,7 +4972,7 @@ h3{
 
   <p>
     El presente expediente fue generado desde el
-    Sistema de Expedientes Docentes NER 7. BENJAMIN ZELEDON
+    Sistema de Expedientes Docentes NER 7.
   </p>
 
   <p>
@@ -4992,121 +4992,53 @@ h3{
 </body>
 </html>
 `;
-if(descargar){
 
-  const marco = document.createElement("iframe");
-
-  marco.style.position = "fixed";
-  marco.style.left = "-10000px";
-  marco.style.top = "0";
-  marco.style.width = "210mm";
-  marco.style.height = "297mm";
-  marco.style.border = "0";
-
-  document.body.appendChild(marco);
-
-  const docPDF = marco.contentWindow.document;
-
-  docPDF.open();
-  docPDF.write(contenido);
-  docPDF.close();
-
-  setTimeout(function(){
-
-    const nombreArchivo =
-      "Expediente_" +
-      String(d.nombre || "Docente")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")
-        .replace(/[^a-zA-Z0-9]+/g,"_")
-        .replace(/^_+|_+$/g,"") +
-      ".pdf";
-
-    html2pdf()
-      .set({
-        margin: 0,
-        filename: nombreArchivo,
-        image: {
-          type: "jpeg",
-          quality: 0.98
-        },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff"
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait"
-        },
-        pagebreak: {
-          mode: ["css", "legacy"]
-        }
-      })
-      .from(docPDF.body)
-      .save()
-      .then(function(){
-        document.body.removeChild(marco);
-      })
-      .catch(function(error){
-        console.error(error);
-        document.body.removeChild(marco);
-        alert("⚠️ No se pudo descargar el PDF.");
-      });
-
-  }, 1000);
-
-  return;
-}
   /* =====================================================
      ABRIR VENTANA DE IMPRESIÓN / GUARDAR COMO PDF
      ===================================================== */
 
-  if(descargar===false){
-
-  const ventanaAbrir =
+  const ventana=
     window.open(
       "",
       "_blank",
       "width=1000,height=800"
     );
 
-  if(!ventanaAbrir){
+  if(!ventana){
     alert(
-      "⚠️ El navegador bloqueó la ventana del expediente. " +
+      "⚠️ El navegador bloqueó la ventana del PDF. " +
       "Permite las ventanas emergentes para este sitio."
     );
     return;
   }
 
-  ventanaAbrir.document.open();
-  ventanaAbrir.document.write(contenido);
-  ventanaAbrir.document.close();
+  ventana.document.open();
+  ventana.document.write(contenido);
+  ventana.document.close();
 
-  return;
-}
+  ventana.onload=function(){
 
+    setTimeout(function(){
 
-const ventana=
-  window.open(
-    "",
-    "_blank",
-    "width=1000,height=800"
-  );
-  const buscar =
+      ventana.focus();
+
+      ventana.print();
+
+    },700);
+
+  };
+
+     
+}function mostrarReportesDocentes(){
+
+  if(!esAdmin()){
+    return;
+  }
+
+  const busqueda =
     (document.getElementById("buscarReporteDocente")?.value || "")
     .toLowerCase()
     .trim();
-
-  const textoSeguro = function(valor){
-    return String(valor ?? "")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
-  };
 
   const lista = DOCENTES
     .map(function(docente){
@@ -5115,41 +5047,39 @@ const ventana=
     .filter(function(d){
 
       const texto = (
-        String(d.nombre || "") + " " +
-        String(d.cedula || "") + " " +
-        String(d.centro || "") + " " +
-        String(d.modalidad || "") + " " +
-        String(d.especialidad || "")
+        (d.nombre || "") + " " +
+        (d.cedula || "") + " " +
+        (d.centro || "") + " " +
+        (d.modalidad || "") + " " +
+        (d.especialidad || "")
       ).toLowerCase();
 
-      return !buscar || texto.includes(buscar);
+      return !busqueda || texto.includes(busqueda);
     });
 
   const contenedor =
     document.getElementById("listaReportesDocentes");
 
-  if(!contenedor){
-    return;
-  }
+  if(!contenedor) return;
 
- console.log("LISTA REPORTES:", lista);
-contenedor.innerHTML = lista.map(function(d){
+  contenedor.innerHTML = lista.map(function(d){
+
     return `
       <div class="reporte-docente">
 
         <div class="reporte-info">
 
-          <strong>${textoSeguro(d.nombre || "")}</strong>
+          <strong>${escapeHTML(d.nombre || "")}</strong>
 
           <div>
             <small>
-              Cédula: ${textoSeguro(d.cedula || "-")}
+              Cédula: ${escapeHTML(d.cedula || "-")}
             </small>
           </div>
 
           <div>
             <small>
-              Centro: ${textoSeguro(d.centro || "-")}
+              Centro: ${escapeHTML(d.centro || "-")}
             </small>
           </div>
 
@@ -5158,22 +5088,15 @@ contenedor.innerHTML = lista.map(function(d){
         <div class="reporte-acciones">
 
           <button
-  type="button"
-  onclick="abrirPDFReporte('${d.id}')">
-  📂 ABRIR
-</button>
+            onclick="descargarPDFReporte('${d.id}')">
+            📄 DESCARGAR PDF
+          </button>
 
-<button
-  type="button"
-  onclick="descargarPDFReporte('${d.id}')">
-  📄 DESCARGAR PDF
-</button>
+          <button
+            onclick="imprimirPDFReporte('${d.id}')">
+            🖨️ IMPRIMIR
+          </button>
 
-<button
-  type="button"
-  onclick="imprimirPDFReporte('${d.id}')">
-  🖨️ IMPRIMIR
-</button>
         </div>
 
       </div>
@@ -5182,7 +5105,10 @@ contenedor.innerHTML = lista.map(function(d){
   }).join("");
 
 }
+
+
 function prepararReporteDocente(id){
+
   if(!esAdmin()){
     alert("🔒 Esta función es exclusiva del administrador ELÍAS.");
     return false;
@@ -5202,24 +5128,17 @@ function prepararReporteDocente(id){
   return true;
 }
 
-function abrirPDFReporte(id){
 
-  if(!prepararReporteDocente(id)){
-    return;
-  }
-
-  generarPDFExpediente(false);
-}
-     
 function descargarPDFReporte(id){
 
   if(!prepararReporteDocente(id)){
     return;
   }
 
-  generarPDFExpediente(true);
+  generarPDFExpediente();
 
 }
+
 
 function imprimirPDFReporte(id){
 
