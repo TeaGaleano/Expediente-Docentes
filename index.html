@@ -5035,10 +5035,19 @@ h3{
     return;
   }
 
-  const busqueda =
+  const buscar =
     (document.getElementById("buscarReporteDocente")?.value || "")
     .toLowerCase()
     .trim();
+
+  const textoSeguro = function(valor){
+    return String(valor ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  };
 
   const lista = DOCENTES
     .map(function(docente){
@@ -5047,20 +5056,22 @@ h3{
     .filter(function(d){
 
       const texto = (
-        (d.nombre || "") + " " +
-        (d.cedula || "") + " " +
-        (d.centro || "") + " " +
-        (d.modalidad || "") + " " +
-        (d.especialidad || "")
+        String(d.nombre || "") + " " +
+        String(d.cedula || "") + " " +
+        String(d.centro || "") + " " +
+        String(d.modalidad || "") + " " +
+        String(d.especialidad || "")
       ).toLowerCase();
 
-      return !busqueda || texto.includes(busqueda);
+      return !buscar || texto.includes(buscar);
     });
 
   const contenedor =
     document.getElementById("listaReportesDocentes");
 
-  if(!contenedor) return;
+  if(!contenedor){
+    return;
+  }
 
   contenedor.innerHTML = lista.map(function(d){
 
@@ -5069,17 +5080,17 @@ h3{
 
         <div class="reporte-info">
 
-          <strong>${escapeHTML(d.nombre || "")}</strong>
+          <strong>${textoSeguro(d.nombre || "")}</strong>
 
           <div>
             <small>
-              Cédula: ${escapeHTML(d.cedula || "-")}
+              Cédula: ${textoSeguro(d.cedula || "-")}
             </small>
           </div>
 
           <div>
             <small>
-              Centro: ${escapeHTML(d.centro || "-")}
+              Centro: ${textoSeguro(d.centro || "-")}
             </small>
           </div>
 
@@ -5088,11 +5099,13 @@ h3{
         <div class="reporte-acciones">
 
           <button
+            type="button"
             onclick="descargarPDFReporte('${d.id}')">
             📄 DESCARGAR PDF
           </button>
 
           <button
+            type="button"
             onclick="imprimirPDFReporte('${d.id}')">
             🖨️ IMPRIMIR
           </button>
@@ -5105,10 +5118,7 @@ h3{
   }).join("");
 
 }
-
-
 function prepararReporteDocente(id){
-
   if(!esAdmin()){
     alert("🔒 Esta función es exclusiva del administrador ELÍAS.");
     return false;
