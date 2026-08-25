@@ -4438,12 +4438,111 @@ function generarPDFExpediente(modo="imprimir"){
   };
 
   /*
-   * Máximo 2 documentos visuales por hoja. Así ninguna tarjeta
-   * puede cruzar el margen ni quedar debajo del pie de página.
+   * Las dos caras de la cédula siempre se presentan juntas
+   * en una misma hoja A4, independientemente de cómo estén
+   * guardadas como grupos separados. El resto de documentos
+   * conserva la distribución uniforme de 2 por hoja.
    */
   let paginasDocumentos="";
-  if(!grupos.length){
 
+  const frenteCedula=Array.isArray(documentos.cedula_frente)
+    ? documentos.cedula_frente
+    : [];
+  const reversoCedula=Array.isArray(documentos.cedula_reverso)
+    ? documentos.cedula_reverso
+    : [];
+
+  const tieneCedula=frenteCedula.length || reversoCedula.length;
+
+  if(tieneCedula){
+    const frente=frenteCedula[0];
+    const reverso=reversoCedula[0];
+
+    const renderCaraCedula=function(archivo,titulo){
+      if(!archivo) return `
+        <div class="cedula-limpia">
+          <h3>${titulo}</h3>
+          <div class="sin-datos">No hay imagen registrada.</div>
+        </div>`;
+
+      const tipo=archivo.tipo||"";
+      const esImagen=tipo.startsWith("image/") && archivo.data;
+
+      if(!esImagen){
+        return `
+          <div class="cedula-limpia">
+            <h3>${titulo}</h3>
+            <div class="archivo-texto">
+              <div class="archivo-titulo">📎 Documento registrado</div>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div class="cedula-limpia">
+          <h3>${titulo}</h3>
+          <div class="marco-cedula">
+            <img
+              src="${archivo.data}"
+              class="foto-cedula"
+              data-cedula="1"
+              alt="">
+          </div>
+        </div>`;
+    };
+
+    paginasDocumentos+=`
+      <section class="pagina pagina-documentos">
+        <div class="encabezado">
+          <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
+          <p>🪪 Cédula de identidad</p>
+        </div>
+
+        <div class="cedulas-hoja">
+          ${renderCaraCedula(frente,"Frente de Cédula")}
+          ${renderCaraCedula(reverso,"Reverso de Cédula")}
+        </div>
+
+        <div class="pie">
+          ${escapeHTML(d.nombre)} · CÉDULA DE IDENTIDAD
+        </div>
+      </section>`;
+  }
+
+  grupos.forEach(function(grupo){
+
+    /* La cédula ya fue colocada arriba en una sola hoja. */
+    if(grupo.clave==="cedula_frente" || grupo.clave==="cedula_reverso") return;
+
+    const archivos=grupo.archivos;
+
+    for(let inicio=0; inicio<archivos.length; inicio+=2){
+
+      const parte=archivos.slice(inicio,inicio+2);
+
+      paginasDocumentos+=`
+        <section class="pagina pagina-documentos">
+
+          <div class="encabezado">
+            <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
+            <p>${escapeHTML(grupo.titulo)}</p>
+          </div>
+
+          <div class="documentos-hoja">
+            ${parte.map(function(a){
+              return renderArchivo(a,grupo.clave);
+            }).join("")}
+          </div>
+
+          <div class="pie">
+            ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
+          </div>
+
+        </section>`;
+    }
+  });
+
+  if(!grupos.length){
     paginasDocumentos=`
       <section class="pagina pagina-documentos">
         <div class="encabezado">
@@ -4453,38 +4552,6 @@ function generarPDFExpediente(modo="imprimir"){
         <div class="sin-datos">No hay documentos registrados actualmente.</div>
         <div class="pie">EXPEDIENTE DOCENTE · DOCUMENTOS</div>
       </section>`;
-
-  }else{
-
-    grupos.forEach(function(grupo){
-
-      const archivos=grupo.archivos;
-
-      for(let inicio=0; inicio<archivos.length; inicio+=2){
-
-        const parte=archivos.slice(inicio,inicio+2);
-
-        paginasDocumentos+=`
-          <section class="pagina pagina-documentos">
-
-            <div class="encabezado">
-              <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
-              <p>${escapeHTML(grupo.titulo)}</p>
-            </div>
-
-            <div class="documentos-hoja">
-              ${parte.map(function(a){
-                return renderArchivo(a,grupo.clave);
-              }).join("")}
-            </div>
-
-            <div class="pie">
-              ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
-            </div>
-
-          </section>`;
-      }
-    });
   }
 
   const fotoPortada=exp.foto
@@ -4528,7 +4595,7 @@ html,body{
 body{
   font-family:Arial,Helvetica,sans-serif;
   color:#17243a;
-  line-height:1.45;
+  line-height:1.5;
   font-size:12px;
 }
 
@@ -4601,7 +4668,7 @@ body{
 
 .portada .institucion{
   font-size:14px;
-  line-height:1.4;
+  line-height:1.5;
   color:#555;
   margin-bottom:13px;
 }
@@ -4612,7 +4679,7 @@ body{
   padding:9px 15px;
   color:#1557a6;
   font-size:13px;
-  line-height:1.35;
+  line-height:1.5;
   font-style:italic;
   border-top:1px solid #d9b44a;
   border-bottom:1px solid #d9b44a;
@@ -4770,6 +4837,40 @@ h3{
   overflow:hidden;
 }
 
+.cedulas-hoja{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:8mm;
+}
+
+.cedula-limpia{
+  width:100%;
+  height:82mm;
+  border:1px solid #d9e2ec;
+  border-radius:8px;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding:5mm 8mm;
+}
+
+.cedula-limpia h3{
+  width:100%;
+  margin:0 0 3mm;
+  color:#1557a6;
+  font-size:12px;
+  line-height:1.5;
+  text-align:left;
+}
+
+.cedula-limpia .marco-cedula{
+  height:66mm;
+}
+
 .foto-documento{
   display:block;
   max-width:100%;
@@ -4789,12 +4890,12 @@ h3{
 }
 
 .foto-cedula.vertical{
-  width:72mm;
+  width:64mm;
   height:150mm;
   max-width:none;
   max-height:none;
   object-fit:contain;
-  transform:rotate(90deg);
+  transform:rotate(-90deg);
 }
 
 .archivo-texto{
