@@ -592,6 +592,53 @@ justify-content:flex-start;
 }
 }
 
+/* ===== ESTADO DE EXPEDIENTES ===== */
+.estado-expediente{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 12px;
+  border-radius:20px;
+  font-weight:800;
+  font-size:13px;
+  white-space:nowrap;
+}
+.estado-completo{
+  background:#e8f7ef;
+  color:#14733f;
+  border:1px solid #a9dfbf;
+}
+.estado-incompleto{
+  background:#fff0f0;
+  color:#b42332;
+  border:1px solid #f2b8bf;
+}
+.completo-fila{
+  border:1px solid var(--borde);
+  border-left:6px solid var(--verde);
+  border-radius:12px;
+  padding:15px 16px;
+  margin:10px 0;
+  background:#fff;
+}
+.completo-fila.incompleto{border-left-color:var(--rojo);}
+.completo-cabecera{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.faltantes{margin-top:10px;color:#a51d1d;font-weight:600;}
+.faltantes span{
+  display:inline-block;
+  background:#fff5f5;
+  border:1px solid #f2c4c4;
+  border-radius:7px;
+  padding:5px 8px;
+  margin:3px 4px 3px 0;
+}
+
 /* RESPONSIVE */
 
 @media(max-width:900px){
@@ -866,6 +913,10 @@ Fotos registradas
 
 <button onclick="mostrarSeccion('reportes')">
 📊 REPORTES
+</button>
+
+<button onclick="mostrarSeccion('completos')">
+📋 EXPEDIENTES COMPLETOS
 </button>
 
 </div>
@@ -1218,6 +1269,23 @@ class="seccion">
 
 </div>
 
+</div>
+
+
+<!-- ======================================================
+     EXPEDIENTES COMPLETOS
+====================================================== -->
+
+<div id="completos" class="seccion">
+  <div class="card">
+    <h2>📋 Expedientes completos</h2>
+    <div class="aviso">
+      <strong>🟢 COMPLETO</strong> = cumple con los documentos y datos básicos requeridos.
+      <br><br>
+      <strong>🔴 INCOMPLETO</strong> = muestra exactamente qué documento o dato falta.
+    </div>
+    <div id="listaExpedientesCompletos"></div>
+  </div>
 </div>
 
 
@@ -2101,9 +2169,21 @@ else{
         nombre:"ELIAS"
       };
 
-      // El administrador sí puede consultar todos los expedientes.
-      await cargarDatosFirebase();
-      await cargarHistorialFirebase();
+      // El administrador entra de inmediato; las consultas pesadas continúan
+      // en segundo plano para que el acceso sea más rápido.
+      Promise.all([
+        cargarDatosFirebase(),
+        cargarHistorialFirebase()
+      ]).then(function(){
+        actualizarEstadisticas();
+        mostrarDocentes();
+        cargarUsuarios();
+        mostrarHistorial();
+        mostrarReportesDocentes();
+        mostrarExpedientesCompletos();
+      }).catch(function(error){
+        console.warn("Carga posterior del administrador:",error);
+      });
 
     }else{
 
@@ -2221,7 +2301,7 @@ else{
         }else if(error.message==="NO_PROFILE"){
           mensaje="❌ El usuario entró correctamente, pero no tiene un perfil en la colección 'usuarios'.";
         }else if(error.message==="NO_DOCENTE_ASSIGNED"){
-          mensaje="❌ La cuenta existe, pero todavía no está vinculada a uno de los 33 docentes.";
+          mensaje="❌ La cuenta existe, pero todavía no está vinculada a uno de los docentes.";
         }else if(error.message){
           mensaje="❌ Error: "+error.message;
         }
@@ -4329,7 +4409,8 @@ function aplicarPermisos(){
     if(!esAdmin() && (
       txt.includes("USUARIOS") ||
       txt.includes("HISTORIAL") ||
-      txt.includes("REPORTES")
+      txt.includes("REPORTES") ||
+      txt.includes("EXPEDIENTES COMPLETOS")
     )){
       btn.style.display="none";
     }else{
@@ -4350,6 +4431,28 @@ function aplicarPermisos(){
     }
   }
 }
+
+/* ENTER EN LOGIN: cédula + contraseña -> iniciar sesión */
+document.addEventListener("keydown",function(e){
+  const login=document.getElementById("login");
+  if(!login || login.classList.contains("oculto")) return;
+
+  if(e.key==="Enter"){
+    const usuario=document.getElementById("usuario");
+    const password=document.getElementById("password");
+
+    if(document.activeElement===usuario && !password.value){
+      e.preventDefault();
+      password.focus();
+      return;
+    }
+
+    if(usuario.value.trim() && password.value){
+      e.preventDefault();
+      iniciarSesion();
+    }
+  }
+});
 
 auth.onAuthStateChanged(function(user){
   if(!user) return;
@@ -4523,35 +4626,48 @@ function generarPDFExpediente(modo="imprimir"){
 
   grupos.forEach(function(grupo){
 
-    /* La cédula ya fue colocada arriba en una sola hoja. */
+    /* La cédula ya fue colocada arriba en una sola hoja.
+       Su diseño actual se conserva sin cambios. */
     if(grupo.clave==="cedula_frente" || grupo.clave==="cedula_reverso") return;
 
-    const archivos=grupo.archivos;
+    /* Cada archivo ocupa una página completa para evitar bloques partidos. */
+    grupo.archivos.forEach(function(archivo){
 
-    for(let inicio=0; inicio<archivos.length; inicio+=2){
+      const tipo=archivo.tipo||"";
+      const esImagen=tipo.startsWith("image/") && archivo.data;
+      const esRecord=grupo.clave==="record_documento";
 
-      const parte=archivos.slice(inicio,inicio+2);
-
-      paginasDocumentos+=`
-        <section class="pagina pagina-documentos">
-
-          <div class="encabezado">
-            <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
-            <p>${escapeHTML(grupo.titulo)}</p>
-          </div>
-
-          <div class="documentos-hoja">
-            ${parte.map(function(a){
-              return renderArchivo(a,grupo.clave);
-            }).join("")}
-          </div>
-
-          <div class="pie">
-            ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
-          </div>
-
-        </section>`;
-    }
+      if(esImagen){
+        paginasDocumentos+=`
+          <section class="pagina pagina-documento-completo ${esRecord ? "pagina-record-completo" : ""}">
+            <div class="encabezado encabezado-documento">
+              <h1>${escapeHTML(grupo.titulo)}</h1>
+              <p>${escapeHTML(d.nombre)}</p>
+            </div>
+            <div class="foto-hoja-completa">
+              <img src="${archivo.data}" class="foto-hoja" alt="">
+            </div>
+            <div class="pie">
+              ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
+            </div>
+          </section>`;
+      }else{
+        paginasDocumentos+=`
+          <section class="pagina pagina-documento-completo">
+            <div class="encabezado encabezado-documento">
+              <h1>${escapeHTML(grupo.titulo)}</h1>
+              <p>${escapeHTML(d.nombre)}</p>
+            </div>
+            <div class="archivo-no-imagen">
+              <div class="archivo-titulo">📎 Documento registrado</div>
+              <p>El archivo está registrado en el expediente.</p>
+            </div>
+            <div class="pie">
+              ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
+            </div>
+          </section>`;
+      }
+    });
   });
 
   if(!grupos.length){
@@ -5239,6 +5355,53 @@ h3{
   letter-spacing:.4px;
 }
 
+/* ===== UNA HOJA POR FOTO / DOCUMENTO ===== */
+.pagina-documento-completo{
+  padding:12mm 12mm 17mm 12mm;
+}
+.encabezado-documento{margin-bottom:7mm;}
+.foto-hoja-completa{
+  position:absolute;
+  left:8mm;
+  right:8mm;
+  top:30mm;
+  bottom:13mm;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.foto-hoja{
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
+.pagina-record-completo .encabezado{display:none;}
+.pagina-record-completo .foto-hoja-completa{
+  left:5mm;
+  right:5mm;
+  top:5mm;
+  bottom:5mm;
+}
+.archivo-no-imagen{
+  position:absolute;
+  left:20mm;
+  right:20mm;
+  top:70mm;
+  bottom:70mm;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border:1px dashed #b8c5d3;
+  border-radius:10px;
+  background:#f8fafc;
+}
+
 /* Los títulos conservan su jerarquía visual */
 .pagina h1,
 .pagina h2,
@@ -5275,6 +5438,28 @@ h3{
   .pagina:last-of-type{
     break-after:auto;
     page-break-after:auto;
+  }
+
+  .pagina-documento-completo .foto-hoja-completa{
+    left:8mm;
+    right:8mm;
+    top:12mm;
+    bottom:10mm;
+  }
+
+  .pagina-documento-completo .foto-hoja{
+    max-width:100%;
+    max-height:100%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+  }
+
+  .pagina-record-completo .foto-hoja-completa{
+    left:5mm;
+    right:5mm;
+    top:5mm;
+    bottom:5mm;
   }
 }
 
@@ -5758,6 +5943,117 @@ ${paginasDocumentos}
     return;
   }
 }
+
+function evaluarExpedienteCompleto(docente){
+  const exp=obtenerExpediente(docente);
+  const d=obtenerDatosActuales(docente);
+  const documentos=exp.documentos||{};
+  const faltantes=[];
+
+  const tieneArchivo=function(clave){
+    return Array.isArray(documentos[clave]) && documentos[clave].length>0;
+  };
+
+  if(!String(d.nombre||"").trim()) faltantes.push("Nombre completo");
+  if(!String(d.cedula||"").trim()) faltantes.push("Cédula");
+  if(!String(d.telefono||"").trim()) faltantes.push("Teléfono");
+  if(!String(d.inss||"").trim()) faltantes.push("INSS");
+  if(!String(d.centro||"").trim()) faltantes.push("Centro educativo");
+  if(!String(d.modalidad||"").trim()) faltantes.push("Modalidad");
+  if(!String(d.formacion||"").trim()) faltantes.push("Formación académica");
+  if(!String(d.experiencia||"").trim()) faltantes.push("Experiencia laboral");
+
+  if(!exp.foto) faltantes.push("Foto de rostro");
+  if(!tieneArchivo("hojaVida")) faltantes.push("Hoja de vida");
+  if(!tieneArchivo("cedula_frente")) faltantes.push("Frente de cédula");
+  if(!tieneArchivo("cedula_reverso")) faltantes.push("Reverso de cédula");
+
+  const tieneTitulo =
+    tieneArchivo("titulo_maestro") ||
+    tieneArchivo("titulo_licenciatura") ||
+    tieneArchivo("titulo_maestria") ||
+    tieneArchivo("titulo_tecnico") ||
+    tieneArchivo("titulo_otro");
+
+  if(!tieneTitulo) faltantes.push("Título académico");
+  if(!tieneArchivo("record_documento")) faltantes.push("Récord profesional");
+
+  if(!tieneArchivo("evaluacion_desempeno") &&
+     !tieneArchivo("autoevaluacion") &&
+     !tieneArchivo("evaluacion_otra")){
+    faltantes.push("Evaluación");
+  }
+
+  return {
+    completo:faltantes.length===0,
+    faltantes:faltantes
+  };
+}
+
+function mostrarExpedientesCompletos(){
+
+  if(!esAdmin()) return;
+
+  const contenedor=document.getElementById("listaExpedientesCompletos");
+  if(!contenedor) return;
+
+  const lista=DOCENTES.map(function(docente){
+    return {
+      docente:docente,
+      d:obtenerDatosActuales(docente),
+      estado:evaluarExpedienteCompleto(docente)
+    };
+  });
+
+  const completos=lista.filter(function(x){return x.estado.completo;}).length;
+  const incompletos=lista.length-completos;
+
+  let html=`
+    <div class="aviso">
+      <strong>Resumen:</strong>
+      🟢 ${completos} completos
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      🔴 ${incompletos} incompletos
+    </div>`;
+
+  html+=lista.map(function(item){
+    const d=item.d;
+    const e=item.estado;
+
+    return `
+      <div class="completo-fila ${e.completo ? "" : "incompleto"}">
+        <div class="completo-cabecera">
+          <div>
+            <strong style="font-size:16px;color:var(--azul3)">
+              ${esc(d.nombre)}
+            </strong>
+            <br>
+            <small>🪪 ${esc(d.cedula||"—")} · ${esc(d.id)}</small>
+          </div>
+
+          <span class="estado-expediente ${e.completo ? "estado-completo" : "estado-incompleto"}">
+            ${e.completo ? "🟢 ✓ COMPLETO" : "🔴 INCOMPLETO"}
+          </span>
+        </div>
+
+        ${
+          e.completo
+          ? `<div style="margin-top:8px;color:#14733f;font-weight:600">
+               ✓ No se detectan faltantes en los requisitos establecidos.
+             </div>`
+          : `<div class="faltantes">
+               <strong>Le falta:</strong><br>
+               ${e.faltantes.map(function(f){
+                 return `<span>❌ ${esc(f)}</span>`;
+               }).join("")}
+             </div>`
+        }
+      </div>`;
+  }).join("");
+
+  contenedor.innerHTML=html;
+}
+
 
 function mostrarReportesDocentes(){
 
