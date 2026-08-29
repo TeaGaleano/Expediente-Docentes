@@ -507,6 +507,37 @@ object-fit:contain;
 display:none;
 }
 
+.camara-preview{
+  position:relative;
+  width:100%;
+  max-height:65vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#000;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.camara-preview video{
+  width:100%;
+  height:auto;
+  max-height:65vh;
+  display:block;
+  object-fit:contain;
+  transform:none !important;
+  filter:none !important;
+}
+
+.guia-camara{
+  position:absolute;
+  inset:8%;
+  border:2px dashed rgba(255,255,255,.9);
+  border-radius:10px;
+  pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.12);
+}
+
 .camara-controles{
 display:flex;
 justify-content:center;
@@ -1451,11 +1482,14 @@ onclick="cerrarCamara()">
 
 </div>
 
+<div class="camara-preview">
 <video
 id="video"
 autoplay
 playsinline>
 </video>
+<div class="guia-camara"></div>
+</div>
 
 <canvas
 id="canvas">
@@ -2568,6 +2602,7 @@ exp.foto
 
 `<img
 src="${exp.foto}"
+loading="lazy"
 alt="Foto">`
 
 :
@@ -3513,8 +3548,9 @@ return`
 <div style="margin-top:8px">
 
 <a
-href="${archivo.data}"
-target="_blank">
+href="${archivo.data || archivo.url || "#"}"
+target="_blank"
+rel="noopener">
 
 📄 ${esc(archivo.nombre)}
 
@@ -3528,8 +3564,9 @@ archivo.tipo.startsWith("image/")
 ?
 
 `<img
-src="${archivo.data}"
-class="miniatura">`
+src="${archivo.data || archivo.url}"
+class="miniatura"
+loading="lazy">`
 
 :
 
@@ -3622,24 +3659,56 @@ async function guardarArchivo(tipo,archivo){
   const exp=obtenerExpediente(docenteActual);
 
   try{
+
     let archivoFinal=archivo;
 
-    // Para fotografías intentamos reducir el tamaño antes de guardarlas.
-    if(archivo.type && archivo.type.startsWith("image/") && archivo.size>MAX_FIRESTORE_FILE_BYTES){
-      archivoFinal=await comprimirImagen(archivo);
+    /*
+     * FOTOGRAFÍAS:
+     * Las reducimos antes de guardarlas para evitar que una captura
+     * de teléfono haga crecer demasiado el documento de Firestore.
+     */
+    if(archivo.type && archivo.type.startsWith("image/")){
+      archivoFinal=await comprimirImagen(archivo,1200,0.68);
     }
 
-    // Si Storage está habilitado, lo usamos para archivos grandes.
-    if(storage && archivoFinal.size>MAX_FIRESTORE_FILE_BYTES){
-      const ruta="expedientes/"+docenteActual.id+"/"+Date.now()+"_"+archivoFinal.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+    /*
+     * IMPORTANTE:
+     * Si Firebase Storage está disponible, las imágenes se guardan allí
+     * y Firestore conserva solamente la URL. Esto evita el error
+     * "invalid-argument" por documentos demasiado grandes.
+     */
+    if(storage && archivoFinal.type && archivoFinal.type.startsWith("image/")){
+
+      const nombreSeguro=(archivoFinal.name||("foto_"+Date.now()+".jpg"))
+        .replace(/[^a-zA-Z0-9._-]/g,"_");
+
+      const ruta="expedientes/"+docenteActual.id+"/"+Date.now()+"_"+nombreSeguro;
       const ref=storage.ref().child(ruta);
-      await ref.put(archivoFinal);
+
+      await ref.put(archivoFinal,{
+        contentType:archivoFinal.type,
+        cacheControl:"public,max-age=31536000"
+      });
+
       const url=await ref.getDownloadURL();
 
       if(tipo==="rostro"){
+
         exp.foto=url;
+        exp.fotoTipo=archivoFinal.type;
+        exp.fotoAlmacenamiento="storage";
+
+        agregarHistorial(
+          "Actualizó fotografía de rostro",
+          docenteActual.id
+        );
+
       }else{
-        if(!exp.documentos[tipo]) exp.documentos[tipo]=[];
+
+        if(!exp.documentos[tipo]){
+          exp.documentos[tipo]=[];
+        }
+
         exp.documentos[tipo].push({
           nombre:archivoFinal.name,
           tipo:archivoFinal.type,
@@ -3647,22 +3716,49 @@ async function guardarArchivo(tipo,archivo){
           almacenamiento:"storage",
           fecha:new Date().toLocaleString()
         });
+
+        agregarHistorial(
+          "Agregó documento: "+archivoFinal.name,
+          docenteActual.id
+        );
       }
 
     }else{
-      // Firestore permite guardar archivos pequeños como base64.
-      if(archivoFinal.size>MAX_FIRESTORE_FILE_BYTES){
-        alert("⚠️ Este archivo pesa demasiado para guardarlo directamente en Firestore.\n\nActiva Firebase Storage (plan de facturación) para guardar documentos grandes.");
-        return;
+
+      /*
+       * Respaldo cuando Storage no está disponible.
+       * Usamos una compresión más fuerte para mantener el registro
+       * dentro de un tamaño razonable.
+       */
+      if(archivoFinal.type && archivoFinal.type.startsWith("image/")){
+        archivoFinal=await comprimirImagen(archivoFinal,900,0.55);
+      }
+
+      if(archivoFinal.size>450*1024){
+        throw new Error(
+          "FOTO_DEMASIADO_GRANDE: Firebase Storage no está disponible y la foto sigue siendo demasiado grande."
+        );
       }
 
       const data=await archivoADataURL(archivoFinal);
 
       if(tipo==="rostro"){
+
         exp.foto=data;
-        agregarHistorial("Actualizó fotografía de rostro",docenteActual.id);
+        exp.fotoTipo=archivoFinal.type;
+        exp.fotoAlmacenamiento="firestore";
+
+        agregarHistorial(
+          "Actualizó fotografía de rostro",
+          docenteActual.id
+        );
+
       }else{
-        if(!exp.documentos[tipo]) exp.documentos[tipo]=[];
+
+        if(!exp.documentos[tipo]){
+          exp.documentos[tipo]=[];
+        }
+
         exp.documentos[tipo].push({
           nombre:archivoFinal.name,
           tipo:archivoFinal.type,
@@ -3670,18 +3766,49 @@ async function guardarArchivo(tipo,archivo){
           almacenamiento:"firestore",
           fecha:new Date().toLocaleString()
         });
-        agregarHistorial("Agregó documento: "+archivoFinal.name,docenteActual.id);
+
+        agregarHistorial(
+          "Agregó documento: "+archivoFinal.name,
+          docenteActual.id
+        );
       }
     }
 
     await guardarDatos();
-    renderizarExpediente();
 
-    alert("✅ Archivo guardado correctamente en Firebase.");
+    renderizarExpediente();
+    mostrarDocentes();
+
+    if(esAdmin()){
+      mostrarExpedientesCompletos();
+      mostrarReportesDocentes();
+    }
+
+    alert("✅ Foto/documento guardado correctamente en Firebase.");
 
   }catch(error){
-    console.error(error);
-    alert("❌ No se pudo guardar el archivo.\n\n"+(error.message||"Revisa Firebase Storage y las reglas."));
+
+    console.error("Error guardando archivo:",error);
+
+    let mensaje="❌ No se pudo guardar el archivo.";
+
+    if(error.code==="storage/unauthorized"){
+      mensaje=
+        "❌ Firebase Storage rechazó el archivo por permisos. Revisa las reglas de Storage.";
+    }else if(error.code==="storage/unknown"){
+      mensaje=
+        "❌ Firebase Storage presentó un error. Revisa la configuración de Storage.";
+    }else if(error.code==="invalid-argument"){
+      mensaje=
+        "❌ Firestore rechazó el registro porque los datos son demasiado grandes. La nueva versión evita guardar fotografías grandes directamente en Firestore.";
+    }else if(String(error.message||"").startsWith("FOTO_DEMASIADO_GRANDE")){
+      mensaje=
+        "❌ Firebase Storage no está disponible para esta foto. Activa/configura Storage para guardar fotografías sin llenar Firestore.";
+    }else if(error.message){
+      mensaje="❌ "+error.message;
+    }
+
+    alert(mensaje+"\n\nCódigo: "+(error.code||"sin código"));
   }
 }
 
@@ -3694,35 +3821,76 @@ function archivoADataURL(archivo){
   });
 }
 
-function comprimirImagen(archivo){
+function comprimirImagen(archivo,max=1200,calidad=0.68){
+
   return new Promise(function(resolve,reject){
+
     const lector=new FileReader();
+
     lector.onload=function(){
+
       const img=new Image();
+
       img.onload=function(){
-        const max=1400;
-        let w=img.width;
-        let h=img.height;
+
+        let w=img.naturalWidth || img.width;
+        let h=img.naturalHeight || img.height;
+
         if(w>max || h>max){
+
           const factor=Math.min(max/w,max/h);
-          w=Math.round(w*factor);
-          h=Math.round(h*factor);
+
+          w=Math.max(1,Math.round(w*factor));
+          h=Math.max(1,Math.round(h*factor));
         }
 
         const canvas=document.createElement("canvas");
+
         canvas.width=w;
         canvas.height=h;
-        canvas.getContext("2d").drawImage(img,0,0,w,h);
+
+        const ctx=canvas.getContext("2d",{alpha:false});
+
+        if(!ctx){
+          reject(new Error("No se pudo preparar la imagen."));
+          return;
+        }
+
+        ctx.imageSmoothingEnabled=true;
+        ctx.imageSmoothingQuality="high";
+
+        ctx.drawImage(img,0,0,w,h);
 
         canvas.toBlob(function(blob){
-          if(!blob){ reject(new Error("No se pudo comprimir la imagen.")); return; }
-          resolve(new File([blob],"foto_"+Date.now()+".jpg",{type:"image/jpeg"}));
-        },"image/jpeg",0.72);
+
+          if(!blob){
+            reject(new Error("No se pudo comprimir la imagen."));
+            return;
+          }
+
+          resolve(
+            new File(
+              [blob],
+              "foto_"+Date.now()+".jpg",
+              {type:"image/jpeg",lastModified:Date.now()}
+            )
+          );
+
+        },"image/jpeg",calidad);
+
       };
-      img.onerror=reject;
+
+      img.onerror=function(){
+        reject(new Error("No se pudo leer la fotografía."));
+      };
+
       img.src=lector.result;
     };
-    lector.onerror=reject;
+
+    lector.onerror=function(){
+      reject(new Error("No se pudo leer el archivo."));
+    };
+
     lector.readAsDataURL(archivo);
   });
 }
@@ -3767,82 +3935,83 @@ async function eliminarDocumento(tipo,indice){
 
 async function abrirCamara(tipo){
 
-tipoCamara=tipo;
+  tipoCamara=tipo;
 
+  document
+    .getElementById("modalCamara")
+    .classList
+    .add("activo");
 
-document
-.getElementById("modalCamara")
-.classList
-.add("activo");
+  document
+    .getElementById("tituloCamara")
+    .textContent=
+      tipo==="rostro"
+        ? "📷 Fotografía de rostro"
+        : "📷 Fotografiar documento";
 
+  const video=document.getElementById("video");
 
-document
-.getElementById("tituloCamara")
-.textContent=
+  try{
 
-tipo==="rostro"
+    if(streamCamara){
+      streamCamara.getTracks().forEach(function(track){track.stop();});
+      streamCamara=null;
+    }
 
-?
+    /*
+     * 4:3 para documentos: reduce el efecto de estiramiento que
+     * algunos teléfonos muestran con una vista 16:9 forzada.
+     */
+    const constraints={
+      audio:false,
+      video:{
+        facingMode:tipo==="rostro" ? {ideal:"user"} : {ideal:"environment"},
+        width:{ideal:1600,min:640},
+        height:{ideal:1200,min:480},
+        aspectRatio:{ideal:4/3},
+        resizeMode:{ideal:"crop-and-scale"}
+      }
+    };
 
-"📷 Fotografía de rostro"
+    streamCamara=
+      await navigator.mediaDevices.getUserMedia(constraints);
 
-:
+    video.srcObject=streamCamara;
 
-"📷 Fotografiar documento";
+    video.style.transform="none";
 
+    try{
+      await video.play();
+    }catch(e){}
 
-try{
+    const pista=streamCamara.getVideoTracks()[0];
 
-streamCamara=
-await navigator.mediaDevices
-.getUserMedia({
+    /*
+     * Si el navegador informa una resolución real, la usamos.
+     * No deformamos la imagen al tomarla.
+     */
+    if(pista && pista.getSettings){
+      const s=pista.getSettings();
+      console.log("Cámara activa:",s.width,s.height,s.facingMode);
+    }
 
-video:{
+    document
+      .getElementById("mensajeCamara")
+      .textContent=
+        tipo==="rostro"
+          ? "Cámara frontal activa. Mantén el rostro centrado dentro de la guía."
+          : "Cámara trasera activa. Coloca el documento plano, centrado y sin inclinar.";
 
-facingMode:
-tipo==="rostro"
-?
-"user"
-:
-"environment",
+  }catch(error){
 
-width:{
-ideal:1920
-},
+    console.error("Cámara:",error);
 
-height:{
-ideal:1080
-}
+    document
+      .getElementById("mensajeCamara")
+      .textContent=
+        "No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
 
-},
-
-audio:false
-
-});
-
-
-document
-.getElementById("video")
-.srcObject=
-streamCamara;
-
-
-document
-.getElementById("mensajeCamara")
-.textContent=
-"Cámara activa. Coloca correctamente el documento y pulsa TOMAR FOTO.";
-
-}
-
-catch(error){
-
-document
-.getElementById("mensajeCamara")
-.textContent=
-"No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
-
-}
-
+  }
 }
 
 
@@ -3852,63 +4021,54 @@ document
 
 function tomarFoto(){
 
-if(!streamCamara)
-return;
+  if(!streamCamara) return;
 
+  const video=document.getElementById("video");
+  const canvas=document.getElementById("canvas");
 
-const video=
-document.getElementById("video");
+  const w=video.videoWidth;
+  const h=video.videoHeight;
 
-const canvas=
-document.getElementById("canvas");
+  if(!w || !h){
+    alert("⏳ La cámara todavía está enfocando. Espera un momento y vuelve a tomar la foto.");
+    return;
+  }
 
+  canvas.width=w;
+  canvas.height=h;
 
-canvas.width=
-video.videoWidth;
+  const ctx=canvas.getContext("2d",{alpha:false});
 
-canvas.height=
-video.videoHeight;
+  /*
+   * NO cambiamos la proporción de la cámara.
+   * Esto evita que documentos y rostros salgan ondulados/estirados.
+   */
+  ctx.drawImage(video,0,0,w,h);
 
+  canvas.toBlob(function(blob){
 
-canvas
-.getContext("2d")
-.drawImage(
-video,
-0,
-0,
-canvas.width,
-canvas.height
-);
+    if(!blob){
+      alert("❌ No se pudo capturar la fotografía.");
+      return;
+    }
 
+    const archivo=new File(
+      [blob],
+      "foto_"+Date.now()+".jpg",
+      {
+        type:"image/jpeg",
+        lastModified:Date.now()
+      }
+    );
 
-canvas.toBlob(function(blob){
+    cerrarCamara();
 
-const archivo=
-new File(
+    guardarArchivo(
+      tipoCamara,
+      archivo
+    );
 
-[blob],
-
-"foto_"+Date.now()+".jpg",
-
-{
-type:"image/jpeg"
-}
-
-);
-
-
-cerrarCamara();
-
-guardarArchivo(
-tipoCamara,
-archivo
-);
-
-},
-"image/jpeg",
-.90
-);
-
+  },"image/jpeg",0.88);
 }
 
 
@@ -4432,6 +4592,15 @@ function aplicarPermisos(){
   }
 }
 
+/* Inicio rápido: el cursor queda listo en Cédula al abrir la página. */
+window.addEventListener("load",function(){
+  const usuario=document.getElementById("usuario");
+  if(usuario){
+    usuario.focus();
+    try{ usuario.select(); }catch(e){}
+  }
+});
+
 /* ENTER EN LOGIN: cédula + contraseña -> iniciar sesión */
 document.addEventListener("keydown",function(e){
   const login=document.getElementById("login");
@@ -4530,7 +4699,7 @@ function generarPDFExpediente(modo="imprimir"){
 
   const renderArchivo=function(archivo,clave){
     const tipo=archivo.tipo||"";
-    const esImagen=tipo.startsWith("image/") && archivo.data;
+    const esImagen=tipo.startsWith("image/") && (archivo.data || archivo.url);
     const esCedula=/cedula/i.test(clave);
 
     if(esImagen){
@@ -4538,7 +4707,7 @@ function generarPDFExpediente(modo="imprimir"){
         <div class="archivo-limpio">
           <div class="${esCedula ? "marco-cedula" : "marco-imagen"}">
             <img
-              src="${archivo.data}"
+              src="${archivo.data || archivo.url}"
               class="${esCedula ? "foto-cedula" : "foto-documento"}"
               data-cedula="${esCedula ? "1" : "0"}"
               alt="">
@@ -4581,7 +4750,7 @@ function generarPDFExpediente(modo="imprimir"){
         </div>`;
 
       const tipo=archivo.tipo||"";
-      const esImagen=tipo.startsWith("image/") && archivo.data;
+      const esImagen=tipo.startsWith("image/") && (archivo.data || archivo.url);
 
       if(!esImagen){
         return `
@@ -4598,7 +4767,7 @@ function generarPDFExpediente(modo="imprimir"){
           <h3>${titulo}</h3>
           <div class="marco-cedula">
             <img
-              src="${archivo.data}"
+              src="${archivo.data || archivo.url}"
               class="foto-cedula"
               data-cedula="1"
               alt="">
@@ -4634,7 +4803,7 @@ function generarPDFExpediente(modo="imprimir"){
     grupo.archivos.forEach(function(archivo){
 
       const tipo=archivo.tipo||"";
-      const esImagen=tipo.startsWith("image/") && archivo.data;
+      const esImagen=tipo.startsWith("image/") && (archivo.data || archivo.url);
       const esRecord=grupo.clave==="record_documento";
 
       if(esImagen){
@@ -4645,7 +4814,7 @@ function generarPDFExpediente(modo="imprimir"){
               <p>${escapeHTML(d.nombre)}</p>
             </div>
             <div class="foto-hoja-completa">
-              <img src="${archivo.data}" class="foto-hoja" alt="">
+              <img src="${archivo.data || archivo.url}" class="foto-hoja" alt="">
             </div>
             <div class="pie">
               ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
