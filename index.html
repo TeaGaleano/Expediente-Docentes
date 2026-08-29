@@ -545,6 +545,54 @@ gap:10px;
 margin-top:12px;
 }
 
+
+/* ===== ESTADO DE GUARDADO ===== */
+.estado-guardado{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%) translateY(20px);
+  z-index:1000;
+  min-width:300px;
+  max-width:92vw;
+  padding:14px 18px;
+  border-radius:14px;
+  background:#17324d;
+  color:#fff;
+  box-shadow:0 12px 35px rgba(0,0,0,.25);
+  font-weight:700;
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+}
+.estado-guardado.visible{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.estado-guardado.proceso{background:#1557a6;}
+.estado-guardado.exito{background:#198754;}
+.estado-guardado.error{background:#dc3545;}
+.estado-guardado .estado-linea{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+}
+.estado-guardado .estado-sub{
+  margin-top:4px;
+  font-size:12px;
+  font-weight:500;
+  opacity:.9;
+}
+.boton-guardando{
+  opacity:.7!important;
+  cursor:wait!important;
+}
+#mensajeCamara{
+  min-height:38px;
+}
+
 /* HISTORIAL */
 
 .historial-item{
@@ -2111,18 +2159,19 @@ observaciones:c.cv_observaciones||""
    GUARDAR
 ====================================================== */
 
-async function guardarDatos(){
+async function guardarDatos(opciones={}){
+  const mostrarEstado = opciones.mostrarEstado !== false;
 
-  if(!docenteActual) return;
+  if(!docenteActual) return false;
 
-  // Un docente solamente puede guardar el expediente que su perfil
-  // de Firebase tiene asignado. El administrador puede guardar cualquiera.
   if(!esAdmin() && sesion.docenteId!==docenteActual.id){
-    alert("❌ No tienes permiso para modificar este expediente.");
-    return;
+    if(mostrarEstado) mostrarEstadoGuardado("error","❌ No tienes permiso para guardar","Este expediente no está asignado a tu usuario.");
+    return false;
   }
 
   try{
+    if(mostrarEstado) mostrarEstadoGuardado("proceso","💾 Guardando información...","Conectando con Firebase.");
+
     const exp=obtenerExpediente(docenteActual);
 
     await db.collection("expedientes")
@@ -2130,18 +2179,58 @@ async function guardarDatos(){
       .set(exp,{merge:true});
 
     actualizarEstadisticas();
+
+    if(mostrarEstado) mostrarEstadoGuardado("exito","✅ Guardado correctamente","La información ya quedó registrada en Firebase.");
+    return true;
+
   }catch(error){
     console.error("Error al guardar expediente:",error);
 
-    let mensaje="❌ No se pudo guardar en Firebase.";
+    let mensaje="No se pudo guardar en Firebase.";
     if(error.code==="permission-denied"){
-      mensaje="❌ Firebase rechazó el guardado. El usuario no está vinculado a este expediente.";
+      mensaje="Firebase rechazó el guardado. El usuario no está vinculado a este expediente.";
     }
 
-    alert(mensaje+"\n\nCódigo: "+(error.code||"sin código"));
+    if(mostrarEstado){
+      mostrarEstadoGuardado("error","❌ No se pudo guardar",mensaje);
+    }
+
+    return false;
   }
 }
 
+
+/* ======================================================
+   ESTADO VISUAL DE GUARDADO
+====================================================== */
+
+let temporizadorEstadoGuardado=null;
+
+function mostrarEstadoGuardado(tipo,titulo,subtitulo=""){
+  const caja=document.getElementById("estadoGuardado");
+  const linea=document.getElementById("estadoGuardadoLinea");
+  const sub=document.getElementById("estadoGuardadoSub");
+
+  if(!caja || !linea || !sub) return;
+
+  clearTimeout(temporizadorEstadoGuardado);
+
+  caja.classList.remove("proceso","exito","error","visible");
+  caja.classList.add(tipo);
+
+  linea.textContent=titulo;
+  sub.textContent=subtitulo;
+
+  requestAnimationFrame(function(){
+    caja.classList.add("visible");
+  });
+
+  if(tipo==="exito" || tipo==="error"){
+    temporizadorEstadoGuardado=setTimeout(function(){
+      caja.classList.remove("visible");
+    },3200);
+  }
+}
 
 /* ======================================================
    LOGIN
@@ -3654,29 +3743,30 @@ selector.click();
 
 async function guardarArchivo(tipo,archivo){
 
-  if(!docenteActual || !archivo) return;
+  if(!docenteActual || !archivo) return false;
 
   const exp=obtenerExpediente(docenteActual);
+  const nombreVisible = tipo==="rostro" ? "fotografía de rostro" : "documento";
 
   try{
 
+    mostrarEstadoGuardado(
+      "proceso",
+      "⏳ Preparando "+nombreVisible+"...",
+      "No cierres esta ventana mientras se guarda."
+    );
+
     let archivoFinal=archivo;
 
-    /*
-     * FOTOGRAFÍAS:
-     * Las reducimos antes de guardarlas para evitar que una captura
-     * de teléfono haga crecer demasiado el documento de Firestore.
-     */
     if(archivo.type && archivo.type.startsWith("image/")){
+      mostrarEstadoGuardado(
+        "proceso",
+        "🖼️ Preparando fotografía...",
+        "Optimizando la imagen sin deformarla."
+      );
       archivoFinal=await comprimirImagen(archivo,1200,0.68);
     }
 
-    /*
-     * IMPORTANTE:
-     * Si Firebase Storage está disponible, las imágenes se guardan allí
-     * y Firestore conserva solamente la URL. Esto evita el error
-     * "invalid-argument" por documentos demasiado grandes.
-     */
     if(storage && archivoFinal.type && archivoFinal.type.startsWith("image/")){
 
       const nombreSeguro=(archivoFinal.name||("foto_"+Date.now()+".jpg"))
@@ -3685,10 +3775,22 @@ async function guardarArchivo(tipo,archivo){
       const ruta="expedientes/"+docenteActual.id+"/"+Date.now()+"_"+nombreSeguro;
       const ref=storage.ref().child(ruta);
 
+      mostrarEstadoGuardado(
+        "proceso",
+        "☁️ Subiendo "+nombreVisible+"...",
+        "La imagen se está guardando de forma segura."
+      );
+
       await ref.put(archivoFinal,{
         contentType:archivoFinal.type,
         cacheControl:"public,max-age=31536000"
       });
+
+      mostrarEstadoGuardado(
+        "proceso",
+        "🔗 Finalizando guardado...",
+        "Guardando la referencia del archivo."
+      );
 
       const url=await ref.getDownloadURL();
 
@@ -3725,11 +3827,6 @@ async function guardarArchivo(tipo,archivo){
 
     }else{
 
-      /*
-       * Respaldo cuando Storage no está disponible.
-       * Usamos una compresión más fuerte para mantener el registro
-       * dentro de un tamaño razonable.
-       */
       if(archivoFinal.type && archivoFinal.type.startsWith("image/")){
         archivoFinal=await comprimirImagen(archivoFinal,900,0.55);
       }
@@ -3739,6 +3836,12 @@ async function guardarArchivo(tipo,archivo){
           "FOTO_DEMASIADO_GRANDE: Firebase Storage no está disponible y la foto sigue siendo demasiado grande."
         );
       }
+
+      mostrarEstadoGuardado(
+        "proceso",
+        "💾 Guardando información...",
+        "Firebase Storage no está disponible; usando el respaldo permitido."
+      );
 
       const data=await archivoADataURL(archivoFinal);
 
@@ -3774,7 +3877,11 @@ async function guardarArchivo(tipo,archivo){
       }
     }
 
-    await guardarDatos();
+    const guardado=await guardarDatos({mostrarEstado:false});
+
+    if(!guardado){
+      throw new Error("No se pudo registrar la información del archivo en el expediente.");
+    }
 
     renderizarExpediente();
     mostrarDocentes();
@@ -3784,31 +3891,39 @@ async function guardarArchivo(tipo,archivo){
       mostrarReportesDocentes();
     }
 
-    alert("✅ Foto/documento guardado correctamente en Firebase.");
+    mostrarEstadoGuardado(
+      "exito",
+      "✅ "+(tipo==="rostro" ? "FOTO GUARDADA CORRECTAMENTE" : "DOCUMENTO GUARDADO CORRECTAMENTE"),
+      "La información ya quedó registrada en Firebase."
+    );
+
+    return true;
 
   }catch(error){
 
     console.error("Error guardando archivo:",error);
 
-    let mensaje="❌ No se pudo guardar el archivo.";
+    let mensaje="No se pudo guardar el archivo.";
 
     if(error.code==="storage/unauthorized"){
-      mensaje=
-        "❌ Firebase Storage rechazó el archivo por permisos. Revisa las reglas de Storage.";
+      mensaje="Firebase Storage rechazó el archivo por permisos.";
     }else if(error.code==="storage/unknown"){
-      mensaje=
-        "❌ Firebase Storage presentó un error. Revisa la configuración de Storage.";
+      mensaje="Firebase Storage presentó un error.";
     }else if(error.code==="invalid-argument"){
-      mensaje=
-        "❌ Firestore rechazó el registro porque los datos son demasiado grandes. La nueva versión evita guardar fotografías grandes directamente en Firestore.";
+      mensaje="Firestore rechazó el registro porque los datos son demasiado grandes.";
     }else if(String(error.message||"").startsWith("FOTO_DEMASIADO_GRANDE")){
-      mensaje=
-        "❌ Firebase Storage no está disponible para esta foto. Activa/configura Storage para guardar fotografías sin llenar Firestore.";
+      mensaje="Firebase Storage no está disponible para esta foto y el archivo es demasiado grande para el respaldo.";
     }else if(error.message){
-      mensaje="❌ "+error.message;
+      mensaje=error.message;
     }
 
-    alert(mensaje+"\n\nCódigo: "+(error.code||"sin código"));
+    mostrarEstadoGuardado(
+      "error",
+      "❌ NO SE GUARDÓ",
+      mensaje
+    );
+
+    return false;
   }
 }
 
@@ -4045,12 +4160,24 @@ function tomarFoto(){
    */
   ctx.drawImage(video,0,0,w,h);
 
+  mostrarEstadoGuardado(
+    "proceso",
+    "📸 Capturando fotografía...",
+    "Preparando la imagen para guardarla."
+  );
+
   canvas.toBlob(function(blob){
 
     if(!blob){
-      alert("❌ No se pudo capturar la fotografía.");
+      mostrarEstadoGuardado(
+        "error",
+        "❌ NO SE PUDO TOMAR LA FOTO",
+        "Inténtalo nuevamente."
+      );
       return;
     }
+
+    const tipoGuardado=tipoCamara;
 
     const archivo=new File(
       [blob],
@@ -4063,10 +4190,13 @@ function tomarFoto(){
 
     cerrarCamara();
 
-    guardarArchivo(
-      tipoCamara,
-      archivo
+    mostrarEstadoGuardado(
+      "proceso",
+      "💾 Foto capturada",
+      "Ahora se está guardando en Firebase..."
     );
+
+    guardarArchivo(tipoGuardado,archivo);
 
   },"image/jpeg",0.88);
 }
@@ -6318,6 +6448,26 @@ function imprimirPDFReporte(id){
     alert("❌ No se pudo abrir la impresión: "+(error.message||error));
   }
 }
+
+
+/* ENTER PARA INICIAR SESIÓN */
+["usuario","password"].forEach(function(id){
+  const campo=document.getElementById(id);
+  if(campo){
+    campo.addEventListener("keydown",function(e){
+      if(e.key==="Enter"){
+        e.preventDefault();
+        iniciarSesion();
+      }
+    });
+  }
+});
+
+window.addEventListener("load",function(){
+  const usuario=document.getElementById("usuario");
+  if(usuario) usuario.focus();
+});
+
 </script>
 </body>
 </html>
