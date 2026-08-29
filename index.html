@@ -545,11 +545,6 @@ gap:10px;
 margin-top:12px;
 }
 
-.camara-controles button:disabled{
-  opacity:.65;
-  cursor:wait;
-}
-
 /* HISTORIAL */
 
 .historial-item{
@@ -2428,11 +2423,25 @@ document
 .trim();
 
 
+const vistosDocentes={};
+
 const lista=
 DOCENTES
 .map(function(docente){
 
 return obtenerDatosActuales(docente);
+
+})
+.filter(function(d){
+
+  const clave=
+    String(d.id||"")+"|"+
+    String(d.cedula||"").toLowerCase().trim();
+
+  if(vistosDocentes[clave]) return false;
+
+  vistosDocentes[clave]=true;
+  return true;
 
 })
 .filter(function(d){
@@ -3657,92 +3666,127 @@ selector.click();
    GUARDAR ARCHIVO
 ====================================================== */
 
-async function guardarArchivo(tipo,archivo){
+async function guardarArchivo(tipo,archivo,desdeCamara){
 
   if(!docenteActual || !archivo) return false;
 
   const exp=obtenerExpediente(docenteActual);
+  const mensajeCamara=document.getElementById("mensajeCamara");
+
+  const conTimeout=function(promesa,ms){
+
+    return Promise.race([
+      promesa,
+      new Promise(function(_,reject){
+        setTimeout(function(){
+          const e=new Error("STORAGE_TIMEOUT");
+          e.code="storage/timeout";
+          reject(e);
+        },ms);
+      })
+    ]);
+  };
 
   try{
 
     let archivoFinal=archivo;
 
-    /*
-     * FOTOGRAFÍAS:
-     * Las reducimos antes de guardarlas para evitar que una captura
-     * de teléfono haga crecer demasiado el documento de Firestore.
-     */
     if(archivo.type && archivo.type.startsWith("image/")){
-      archivoFinal=await comprimirImagen(archivo,1200,0.68);
+      archivoFinal=await comprimirImagen(archivo,1100,0.66);
     }
 
-    /*
-     * IMPORTANTE:
-     * Si Firebase Storage está disponible, las imágenes se guardan allí
-     * y Firestore conserva solamente la URL. Esto evita el error
-     * "invalid-argument" por documentos demasiado grandes.
-     */
+    let guardadoEnStorage=false;
+
+    /* PRIMER INTENTO: STORAGE */
     if(storage && archivoFinal.type && archivoFinal.type.startsWith("image/")){
 
-      const nombreSeguro=(archivoFinal.name||("foto_"+Date.now()+".jpg"))
-        .replace(/[^a-zA-Z0-9._-]/g,"_");
+      try{
 
-      const ruta="expedientes/"+docenteActual.id+"/"+Date.now()+"_"+nombreSeguro;
-      const ref=storage.ref().child(ruta);
-
-      await ref.put(archivoFinal,{
-        contentType:archivoFinal.type,
-        cacheControl:"public,max-age=31536000"
-      });
-
-      const url=await ref.getDownloadURL();
-
-      if(tipo==="rostro"){
-
-        exp.foto=url;
-        exp.fotoTipo=archivoFinal.type;
-        exp.fotoAlmacenamiento="storage";
-
-        agregarHistorial(
-          "Actualizó fotografía de rostro",
-          docenteActual.id
-        );
-
-      }else{
-
-        if(!exp.documentos[tipo]){
-          exp.documentos[tipo]=[];
+        if(desdeCamara && mensajeCamara){
+          mensajeCamara.textContent="☁️ Subiendo fotografía...";
         }
 
-        exp.documentos[tipo].push({
-          nombre:archivoFinal.name,
-          tipo:archivoFinal.type,
-          url:url,
-          almacenamiento:"storage",
-          fecha:new Date().toLocaleString()
-        });
+        const nombreSeguro=
+          (archivoFinal.name||("foto_"+Date.now()+".jpg"))
+          .replace(/[^a-zA-Z0-9._-]/g,"_");
 
-        agregarHistorial(
-          "Agregó documento: "+archivoFinal.name,
-          docenteActual.id
+        const ruta=
+          "expedientes/"+docenteActual.id+"/"+Date.now()+"_"+nombreSeguro;
+
+        const ref=storage.ref().child(ruta);
+
+        await conTimeout(
+          ref.put(archivoFinal,{
+            contentType:archivoFinal.type,
+            cacheControl:"public,max-age=31536000"
+          }),
+          12000
         );
+
+        const url=await conTimeout(
+          ref.getDownloadURL(),
+          8000
+        );
+
+        if(tipo==="rostro"){
+
+          exp.foto=url;
+          exp.fotoTipo=archivoFinal.type;
+          exp.fotoAlmacenamiento="storage";
+
+          agregarHistorial(
+            "Actualizó fotografía de rostro",
+            docenteActual.id
+          );
+
+        }else{
+
+          if(!exp.documentos[tipo]){
+            exp.documentos[tipo]=[];
+          }
+
+          exp.documentos[tipo].push({
+            nombre:archivoFinal.name,
+            tipo:archivoFinal.type,
+            url:url,
+            almacenamiento:"storage",
+            fecha:new Date().toLocaleString()
+          });
+
+          agregarHistorial(
+            "Agregó documento: "+archivoFinal.name,
+            docenteActual.id
+          );
+        }
+
+        guardadoEnStorage=true;
+
+      }catch(errorStorage){
+
+        console.warn(
+          "Storage falló o tardó demasiado. Se usará respaldo.",
+          errorStorage
+        );
+
+        if(desdeCamara && mensajeCamara){
+          mensajeCamara.textContent="☁️ Preparando respaldo seguro...";
+        }
       }
+    }
 
-    }else{
+    /* SEGUNDO INTENTO: FIRESTORE */
+    if(!guardadoEnStorage){
 
-      /*
-       * Respaldo cuando Storage no está disponible.
-       * Usamos una compresión más fuerte para mantener el registro
-       * dentro de un tamaño razonable.
-       */
       if(archivoFinal.type && archivoFinal.type.startsWith("image/")){
-        archivoFinal=await comprimirImagen(archivoFinal,900,0.55);
+        archivoFinal=await comprimirImagen(archivoFinal,700,0.43);
       }
 
-      if(archivoFinal.size>450*1024){
-        throw new Error(
-          "FOTO_DEMASIADO_GRANDE: Firebase Storage no está disponible y la foto sigue siendo demasiado grande."
-        );
+      if(archivoFinal.size>430*1024){
+        archivoFinal=await comprimirImagen(archivoFinal,560,0.34);
+      }
+
+      if(archivoFinal.size>480*1024){
+        throw new Error("FOTO_DEMASIADO_GRANDE");
       }
 
       const data=await archivoADataURL(archivoFinal);
@@ -3789,117 +3833,47 @@ async function guardarArchivo(tipo,archivo){
       mostrarReportesDocentes();
     }
 
-    alert("✅ Foto/documento guardado correctamente en Firebase.");
+    if(desdeCamara && mensajeCamara){
+      mensajeCamara.textContent="✅ Fotografía guardada correctamente.";
+    }else{
+      alert(
+        guardadoEnStorage
+          ? "✅ Fotografía/documento guardado correctamente en Firebase Storage."
+          : "✅ Fotografía/documento guardado correctamente en el expediente."
+      );
+    }
+
     return true;
 
   }catch(error){
 
     console.error("Error guardando archivo:",error);
 
-    let mensaje="❌ No se pudo guardar el archivo.";
+    let mensaje="❌ No se pudo guardar la fotografía.";
 
-    if(error.code==="storage/unauthorized"){
-      mensaje=
-        "❌ Firebase Storage rechazó el archivo por permisos. Revisa las reglas de Storage.";
-    }else if(error.code==="storage/unknown"){
-      mensaje=
-        "❌ Firebase Storage presentó un error. Revisa la configuración de Storage.";
-    }else if(error.code==="invalid-argument"){
-      mensaje=
-        "❌ Firestore rechazó el registro porque los datos son demasiado grandes. La nueva versión evita guardar fotografías grandes directamente en Firestore.";
-    }else if(String(error.message||"").startsWith("FOTO_DEMASIADO_GRANDE")){
-      mensaje=
-        "❌ Firebase Storage no está disponible para esta foto. Activa/configura Storage para guardar fotografías sin llenar Firestore.";
+    if(error.code==="permission-denied"){
+      mensaje="❌ Firebase rechazó el guardado por permisos.";
+    }else if(error.code==="storage/unauthorized"){
+      mensaje="❌ Firebase Storage rechazó el archivo por permisos.";
+    }else if(error.message==="FOTO_DEMASIADO_GRANDE"){
+      mensaje="❌ La fotografía sigue siendo demasiado grande.";
     }else if(error.message){
       mensaje="❌ "+error.message;
     }
 
-    alert(mensaje+"\n\nCódigo: "+(error.code||"sin código"));
+    if(desdeCamara && mensajeCamara){
+      mensajeCamara.textContent=mensaje;
+    }else{
+      alert(mensaje+"\n\nCódigo: "+(error.code||"sin código"));
+    }
+
+    return false;
   }
 }
 
-function archivoADataURL(archivo){
-  return new Promise(function(resolve,reject){
-    const lector=new FileReader();
-    lector.onload=()=>resolve(lector.result);
-    lector.onerror=reject;
-    lector.readAsDataURL(archivo);
-  });
-}
 
-function comprimirImagen(archivo,max=1200,calidad=0.68){
-
-  return new Promise(function(resolve,reject){
-
-    const lector=new FileReader();
-
-    lector.onload=function(){
-
-      const img=new Image();
-
-      img.onload=function(){
-
-        let w=img.naturalWidth || img.width;
-        let h=img.naturalHeight || img.height;
-
-        if(w>max || h>max){
-
-          const factor=Math.min(max/w,max/h);
-
-          w=Math.max(1,Math.round(w*factor));
-          h=Math.max(1,Math.round(h*factor));
-        }
-
-        const canvas=document.createElement("canvas");
-
-        canvas.width=w;
-        canvas.height=h;
-
-        const ctx=canvas.getContext("2d",{alpha:false});
-
-        if(!ctx){
-          reject(new Error("No se pudo preparar la imagen."));
-          return;
-        }
-
-        ctx.imageSmoothingEnabled=true;
-        ctx.imageSmoothingQuality="high";
-
-        ctx.drawImage(img,0,0,w,h);
-
-        canvas.toBlob(function(blob){
-
-          if(!blob){
-            reject(new Error("No se pudo comprimir la imagen."));
-            return;
-          }
-
-          resolve(
-            new File(
-              [blob],
-              "foto_"+Date.now()+".jpg",
-              {type:"image/jpeg",lastModified:Date.now()}
-            )
-          );
-
-        },"image/jpeg",calidad);
-
-      };
-
-      img.onerror=function(){
-        reject(new Error("No se pudo leer la fotografía."));
-      };
-
-      img.src=lector.result;
-    };
-
-    lector.onerror=function(){
-      reject(new Error("No se pudo leer el archivo."));
-    };
-
-    lector.readAsDataURL(archivo);
-  });
-}
+/* ======================================================
+   LOGIN
 
 
 /* ======================================================
@@ -3943,19 +3917,28 @@ async function abrirCamara(tipo){
 
   tipoCamara=tipo;
 
-  document
-    .getElementById("modalCamara")
-    .classList
-    .add("activo");
-
-  document
-    .getElementById("tituloCamara")
-    .textContent=
-      tipo==="rostro"
-        ? "📷 Fotografía de rostro"
-        : "📷 Fotografiar documento";
-
+  const modal=document.getElementById("modalCamara");
+  const titulo=document.getElementById("tituloCamara");
   const video=document.getElementById("video");
+  const mensaje=document.getElementById("mensajeCamara");
+  const boton=document.querySelector("#modalCamara .camara-controles button");
+
+  modal.classList.add("activo");
+
+  titulo.textContent =
+    tipo==="rostro"
+      ? "📷 Fotografía de rostro"
+      : "📷 Fotografiar documento";
+
+  if(boton){
+    boton.disabled=false;
+    boton.innerHTML="📸 TOMAR FOTO";
+  }
+
+  mensaje.textContent =
+    tipo==="rostro"
+      ? "Cámara frontal activa. Mantén el rostro centrado dentro de la guía."
+      : "Cámara trasera activa. Coloca el documento plano, centrado y sin inclinar.";
 
   try{
 
@@ -3964,18 +3947,15 @@ async function abrirCamara(tipo){
       streamCamara=null;
     }
 
-    /*
-     * 4:3 para documentos: reduce el efecto de estiramiento que
-     * algunos teléfonos muestran con una vista 16:9 forzada.
-     */
     const constraints={
       audio:false,
       video:{
-        facingMode:tipo==="rostro" ? {ideal:"user"} : {ideal:"environment"},
-        width:{ideal:1600,min:640},
-        height:{ideal:1200,min:480},
-        aspectRatio:{ideal:4/3},
-        resizeMode:{ideal:"crop-and-scale"}
+        facingMode:tipo==="rostro"
+          ? {ideal:"user"}
+          : {ideal:"environment"},
+        width:{ideal:1280,min:640},
+        height:{ideal:960,min:480},
+        aspectRatio:{ideal:4/3}
       }
     };
 
@@ -3983,40 +3963,29 @@ async function abrirCamara(tipo){
       await navigator.mediaDevices.getUserMedia(constraints);
 
     video.srcObject=streamCamara;
-
     video.style.transform="none";
 
     try{
       await video.play();
     }catch(e){}
 
-    const pista=streamCamara.getVideoTracks()[0];
-
-    /*
-     * Si el navegador informa una resolución real, la usamos.
-     * No deformamos la imagen al tomarla.
-     */
-    if(pista && pista.getSettings){
-      const s=pista.getSettings();
-      console.log("Cámara activa:",s.width,s.height,s.facingMode);
+    if(!video.videoWidth || !video.videoHeight){
+      await new Promise(function(resolve){
+        const listo=function(){
+          video.removeEventListener("loadedmetadata",listo);
+          resolve();
+        };
+        video.addEventListener("loadedmetadata",listo);
+        setTimeout(resolve,1200);
+      });
     }
-
-    document
-      .getElementById("mensajeCamara")
-      .textContent=
-        tipo==="rostro"
-          ? "Cámara frontal activa. Mantén el rostro centrado dentro de la guía."
-          : "Cámara trasera activa. Coloca el documento plano, centrado y sin inclinar.";
 
   }catch(error){
 
     console.error("Cámara:",error);
 
-    document
-      .getElementById("mensajeCamara")
-      .textContent=
-        "No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
-
+    mensaje.textContent =
+      "❌ No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
   }
 }
 
@@ -4031,40 +4000,42 @@ async function tomarFoto(){
 
   const video=document.getElementById("video");
   const canvas=document.getElementById("canvas");
-  const boton=document.querySelector("#modalCamara .camara-controles button");
   const mensaje=document.getElementById("mensajeCamara");
+  const boton=document.querySelector("#modalCamara .camara-controles button");
 
   const w=video.videoWidth;
   const h=video.videoHeight;
 
   if(!w || !h){
-    mensaje.textContent="⏳ La cámara todavía no está lista. Espera un momento y vuelve a tomar la foto.";
+    mensaje.textContent=
+      "⏳ La cámara todavía está iniciando. Espera un momento y vuelve a tomar la foto.";
     return;
   }
-
-  if(boton) boton.disabled=true;
-  if(boton) boton.textContent="⏳ GUARDANDO FOTO...";
-  mensaje.textContent="📸 Foto capturada. Preparando y guardando en Firebase...";
 
   canvas.width=w;
   canvas.height=h;
 
   const ctx=canvas.getContext("2d",{alpha:false});
-
-  /*
-   * Conservamos exactamente la proporción real del video.
-   * No estiramos ni deformamos la fotografía.
-   */
+  ctx.setTransform(1,0,0,1,0,0);
   ctx.drawImage(video,0,0,w,h);
 
-  canvas.toBlob(async function(blob){
+  if(boton){
+    boton.disabled=true;
+    boton.innerHTML="⏳ PROCESANDO FOTO...";
+  }
 
-    if(!blob){
-      if(boton) boton.disabled=false;
-      if(boton) boton.textContent="📸 TOMAR FOTO";
-      mensaje.textContent="❌ No se pudo capturar la fotografía. Intenta nuevamente.";
-      return;
-    }
+  mensaje.textContent="☁️ Guardando fotografía...";
+
+  try{
+
+    const blob=await new Promise(function(resolve,reject){
+
+      canvas.toBlob(function(resultado){
+        if(resultado) resolve(resultado);
+        else reject(new Error("No se pudo generar la imagen."));
+      },"image/jpeg",0.82);
+
+    });
 
     const archivo=new File(
       [blob],
@@ -4075,33 +4046,41 @@ async function tomarFoto(){
       }
     );
 
-    /*
-     * NO cerramos la cámara antes de guardar.
-     * Así el docente recibe confirmación real de que la foto
-     * quedó registrada.
-     */
-    mensaje.textContent="☁️ Guardando fotografía...";
+    /* La cámara NO se cierra hasta confirmar el guardado. */
+    const guardado=await guardarArchivo(tipoCamara,archivo,true);
 
-    try{
-      const guardado=await guardarArchivo(tipoCamara,archivo);
+    if(guardado){
 
-      if(guardado){
-        mensaje.textContent="✅ Fotografía guardada correctamente.";
-        cerrarCamara();
-      }else{
-        mensaje.textContent="❌ No se pudo guardar la fotografía. Puedes volver a intentarlo.";
-        if(boton) boton.disabled=false;
-        if(boton) boton.textContent="📸 TOMAR FOTO";
+      mensaje.textContent="✅ Fotografía guardada correctamente.";
+
+      await new Promise(function(resolve){
+        setTimeout(resolve,500);
+      });
+
+      cerrarCamara();
+
+    }else{
+
+      mensaje.textContent=
+        "❌ No se pudo guardar la fotografía. Inténtalo nuevamente.";
+
+      if(boton){
+        boton.disabled=false;
+        boton.innerHTML="📸 TOMAR FOTO";
       }
-
-    }catch(error){
-      console.error("Error al guardar fotografía:",error);
-      mensaje.textContent="❌ Error al guardar la fotografía.";
-      if(boton) boton.disabled=false;
-      if(boton) boton.textContent="📸 TOMAR FOTO";
     }
 
-  },"image/jpeg",0.88);
+  }catch(error){
+
+    console.error("Error capturando fotografía:",error);
+
+    mensaje.textContent="❌ Error al procesar la fotografía.";
+
+    if(boton){
+      boton.disabled=false;
+      boton.innerHTML="📸 TOMAR FOTO";
+    }
+  }
 }
 
 
@@ -4111,32 +4090,29 @@ async function tomarFoto(){
 
 function cerrarCamara(){
 
-if(streamCamara){
+  if(streamCamara){
 
-streamCamara
-.getTracks()
-.forEach(function(track){
+    streamCamara.getTracks().forEach(function(track){
+      track.stop();
+    });
 
-track.stop();
+    streamCamara=null;
+  }
 
-});
+  const video=document.getElementById("video");
 
-streamCamara=null;
+  if(video){
+    video.pause();
+    video.srcObject=null;
+  }
 
-}
-
-
-document
-.getElementById("modalCamara")
-.classList
-.remove("activo");
-
+  document.getElementById("modalCamara").classList.remove("activo");
 }
 
 
 /* ======================================================
    TABS
-====================================================== */
+
 
 function abrirTab(
 id,
@@ -6199,12 +6175,26 @@ function mostrarExpedientesCompletos(){
   const contenedor=document.getElementById("listaExpedientesCompletos");
   if(!contenedor) return;
 
+  const vistosCompletos={};
+
   const lista=DOCENTES.map(function(docente){
     return {
       docente:docente,
       d:obtenerDatosActuales(docente),
       estado:evaluarExpedienteCompleto(docente)
     };
+  }).filter(function(item){
+
+    const d=item.d;
+    const clave=
+      String(d.id||"")+"|"+
+      String(d.cedula||"").toLowerCase().trim();
+
+    if(vistosCompletos[clave]) return false;
+
+    vistosCompletos[clave]=true;
+    return true;
+
   });
 
   const completos=lista.filter(function(x){return x.estado.completo;}).length;
@@ -6269,8 +6259,21 @@ function mostrarReportesDocentes(){
   const buscar=String(document.getElementById("buscarReporteDocente")?.value||"")
     .toLowerCase().trim();
 
+  const vistosReportes={};
+
   const lista=DOCENTES.map(function(docente){
     return obtenerDatosActuales(docente);
+  }).filter(function(d){
+
+    const clave=
+      String(d.id||"")+"|"+
+      String(d.cedula||"").toLowerCase().trim();
+
+    if(vistosReportes[clave]) return false;
+
+    vistosReportes[clave]=true;
+    return true;
+
   }).filter(function(d){
     const texto=(String(d.nombre||"")+" "+String(d.cedula||"")+" "+String(d.centro||"")+" "+String(d.modalidad||"")+" "+String(d.especialidad||"")).toLowerCase();
     return !buscar || texto.includes(buscar);
