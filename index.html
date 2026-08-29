@@ -507,75 +507,11 @@ object-fit:contain;
 display:none;
 }
 
-.camara-preview{
-  position:relative;
-  width:100%;
-  max-height:65vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#000;
-  border-radius:12px;
-  overflow:hidden;
-}
-
-.camara-preview video{
-  width:100%;
-  height:auto;
-  max-height:65vh;
-  display:block;
-  object-fit:contain;
-  transform:none !important;
-  filter:none !important;
-}
-
-.guia-camara{
-  position:absolute;
-  inset:8%;
-  border:2px dashed rgba(255,255,255,.9);
-  border-radius:10px;
-  pointer-events:none;
-  box-shadow:0 0 0 9999px rgba(0,0,0,.12);
-}
-
 .camara-controles{
 display:flex;
 justify-content:center;
 gap:10px;
 margin-top:12px;
-}
-
-
-/* ===== MENSAJE DE GUARDADO ===== */
-.estado-guardado{
-  position:fixed;
-  left:50%;
-  bottom:22px;
-  transform:translate(-50%,20px);
-  z-index:9999;
-  width:min(92vw,430px);
-  padding:15px 18px;
-  border-radius:14px;
-  color:#fff;
-  background:#1557a6;
-  box-shadow:0 10px 35px rgba(0,0,0,.28);
-  text-align:center;
-  font-weight:800;
-  opacity:0;
-  pointer-events:none;
-  transition:.2s ease;
-}
-.estado-guardado.visible{
-  opacity:1;
-  transform:translate(-50%,0);
-}
-.estado-guardado.proceso{background:#1557a6;}
-.estado-guardado.exito{background:#198754;}
-.estado-guardado.error{background:#dc3545;}
-.estado-guardado .sub{
-  margin-top:4px;
-  font-size:12px;
-  font-weight:500;
 }
 
 /* HISTORIAL */
@@ -589,118 +525,6 @@ margin:8px 0;
 
 .historial-item strong{
 color:var(--azul3);
-}
-
-/* REPORTES */
-
-.reporte-docente{
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:18px;
-padding:16px 18px;
-margin:10px 0;
-background:#fff;
-border:1px solid var(--borde);
-border-radius:12px;
-box-shadow:0 2px 10px rgba(23,50,77,.05);
-}
-
-.reporte-docente:hover{
-box-shadow:0 5px 18px rgba(23,50,77,.10);
-}
-
-.reporte-info{
-flex:1;
-min-width:0;
-}
-
-.reporte-info strong{
-display:block;
-font-size:16px;
-color:var(--azul3);
-margin-bottom:5px;
-}
-
-.reporte-info small{
-color:var(--gris);
-}
-
-.reporte-acciones{
-display:flex;
-flex-wrap:wrap;
-gap:8px;
-justify-content:flex-end;
-}
-
-.reporte-acciones button{
-white-space:nowrap;
-}
-
-.reporte-acciones button:first-child{
-background:var(--verde);
-}
-
-.reporte-acciones button:last-child{
-background:var(--azul3);
-}
-
-@media(max-width:700px){
-.reporte-docente{
-flex-direction:column;
-align-items:flex-start;
-}
-.reporte-acciones{
-width:100%;
-justify-content:flex-start;
-}
-}
-
-/* ===== ESTADO DE EXPEDIENTES ===== */
-.estado-expediente{
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  padding:7px 12px;
-  border-radius:20px;
-  font-weight:800;
-  font-size:13px;
-  white-space:nowrap;
-}
-.estado-completo{
-  background:#e8f7ef;
-  color:#14733f;
-  border:1px solid #a9dfbf;
-}
-.estado-incompleto{
-  background:#fff0f0;
-  color:#b42332;
-  border:1px solid #f2b8bf;
-}
-.completo-fila{
-  border:1px solid var(--borde);
-  border-left:6px solid var(--verde);
-  border-radius:12px;
-  padding:15px 16px;
-  margin:10px 0;
-  background:#fff;
-}
-.completo-fila.incompleto{border-left-color:var(--rojo);}
-.completo-cabecera{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-}
-.faltantes{margin-top:10px;color:#a51d1d;font-weight:600;}
-.faltantes span{
-  display:inline-block;
-  background:#fff5f5;
-  border:1px solid #f2c4c4;
-  border-radius:7px;
-  padding:5px 8px;
-  margin:3px 4px 3px 0;
 }
 
 /* RESPONSIVE */
@@ -778,13 +602,13 @@ Expedientes Docentes
 </h1>
 
 <div class="login-sub">
-MINED · Rancho Grande<br><small style="font-size:11px;">Sistema Firebase NER 7 · Diagnóstico de acceso</small>
+MINED · Rancho Grande
 </div>
 
 <div id="mensajeLogin"></div>
 
 <label>
-Cédula
+Usuario
 </label>
 
 <input
@@ -792,7 +616,7 @@ id="usuario"
 type="text"
 value="ELIAS"
 autocomplete="username"
-placeholder="Ingrese número de cédula">
+placeholder="Ingrese usuario">
 
 <label>
 Contraseña
@@ -977,10 +801,6 @@ Fotos registradas
 
 <button onclick="mostrarSeccion('reportes')">
 📊 REPORTES
-</button>
-
-<button onclick="mostrarSeccion('completos')">
-📋 EXPEDIENTES COMPLETOS
 </button>
 
 </div>
@@ -1192,7 +1012,7 @@ Usuario
 
 <input
 id="nuevoUsuario"
-placeholder="Ejemplo: 447-270586-0001Y">
+placeholder="Ejemplo: DOCENTE01">
 
 </div>
 
@@ -1255,7 +1075,7 @@ Director
 class="btn-verde"
 onclick="crearUsuario()">
 
-+ CREAR ACCESO DOCENTE
++ CREAR USUARIO
 
 </button>
 
@@ -1310,46 +1130,43 @@ class="seccion">
 
 <div class="aviso">
 
-<h3>📄 Expedientes de docentes</h3>
+Esta sección será utilizada para generar:
 
-<div class="buscador">
+<br><br>
 
-  <input
-    type="text"
-    id="buscarReporteDocente"
-    oninput="mostrarReportesDocentes()"
-    placeholder="🔎 Buscar nombre, cédula, centro..."
-  >
+📊 Reportes de docentes
 
-</div>
+<br>
+📄 PDF de expedientes
 
-<div id="listaReportesDocentes"></div>
+<br>
+📗 Excel
 
+<br>
+📋 Reportes por centro
 
-</div>
+<br>
+🎓 Reportes por modalidad
 
-</div>
-
-
-</div>
+<br>
+⭐ Reportes de evaluaciones
 
 </div>
 
+<button
+onclick="alert('Módulo de exportación Excel/PDF en la siguiente etapa.')">
 
-<!-- ======================================================
-     EXPEDIENTES COMPLETOS
-====================================================== -->
+📊 EXPORTAR
 
-<div id="completos" class="seccion">
-  <div class="card">
-    <h2>📋 Expedientes completos</h2>
-    <div class="aviso">
-      <strong>🟢 COMPLETO</strong> = cumple con los documentos y datos básicos requeridos.
-      <br><br>
-      <strong>🔴 INCOMPLETO</strong> = muestra exactamente qué documento o dato falta.
-    </div>
-    <div id="listaExpedientesCompletos"></div>
-  </div>
+</button>
+
+</div>
+
+</div>
+
+
+</div>
+
 </div>
 
 
@@ -1515,14 +1332,11 @@ onclick="cerrarCamara()">
 
 </div>
 
-<div class="camara-preview">
 <video
 id="video"
 autoplay
 playsinline>
 </video>
-<div class="guia-camara"></div>
-</div>
 
 <canvas
 id="canvas">
@@ -1558,9 +1372,6 @@ type="file"
 class="oculto">
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
@@ -1572,7 +1383,7 @@ class="oculto">
 ====================================================== */
 
 const firebaseConfig={
-  apiKey:"AIzaSyCv6NK_ECgZAUfwZtIZghkmW6t4l8x-Me8",
+  apiKey:"AIzaSyCvC0K2E3GZAUfwZtIZghkW6t4I8x-Me8",
   authDomain:"expedientes-docentes-ner-7.firebaseapp.com",
   projectId:"expedientes-docentes-ner-7",
   storageBucket:"expedientes-docentes-ner-7.firebasestorage.app",
@@ -1624,7 +1435,7 @@ const DOCENTES=[
 {
 id:"D001",
 nombre:"Reyna Isabel Garcia Rodriguez",
-cedula:"453-030487-0003R",
+cedula:"453-141292-0000M",
 telefono:"78193090",
 inss:"28689506",
 centro:"Primero De Mayo",
@@ -1960,7 +1771,7 @@ combinacion:"Matematicas"
 {
 id:"D029",
 nombre:"Pedro Gonzalez Rodriguez",
-cedula:"453-191073-0000N",
+cedula:"453-191076-0000N",
 telefono:"81828378",
 inss:"9293599",
 centro:"Benjamin Zeledon",
@@ -2014,18 +1825,6 @@ inss:"41769926",
 centro:"Monseñor Carlos Santi",
 modalidad:"SADC",
 especialidad:"",
-combinacion:""
-},
-
-{
-id:"D034",
-nombre:"Darling Benicia Estrada Urbina",
-cedula:"246-180503-1000V",
-telefono:"7744-3232",
-inss:"20476698",
-centro:"Monseñor Carlos Santi",
-modalidad:"SADC",
-especialidad:"X",
 combinacion:""
 }
 
@@ -2144,56 +1943,20 @@ observaciones:c.cv_observaciones||""
    GUARDAR
 ====================================================== */
 
-async function guardarDatos(opciones={}){
+async function guardarDatos(){
 
-  const mostrarEstado=opciones.mostrarEstado!==false;
-
-  if(!docenteActual) return false;
-
-  if(!esAdmin() && sesion.docenteId!==docenteActual.id){
-    if(mostrarEstado){
-      mostrarEstadoGuardado(
-        "error",
-        "❌ SIN PERMISO",
-        "Este expediente no está asignado a tu usuario."
-      );
-    }
-    return false;
-  }
+  if(!docenteActual) return;
 
   try{
-
     const exp=obtenerExpediente(docenteActual);
-
     await db.collection("expedientes")
       .doc(docenteActual.id)
       .set(exp,{merge:true});
 
     actualizarEstadisticas();
-
-    if(mostrarEstado){
-      mostrarEstadoGuardado(
-        "exito",
-        "✅ GUARDADO CORRECTAMENTE",
-        "La información ya quedó registrada."
-      );
-    }
-
-    return true;
-
   }catch(error){
-
-    console.error("Error al guardar expediente:",error);
-
-    if(mostrarEstado){
-      mostrarEstadoGuardado(
-        "error",
-        "❌ NO SE PUDO GUARDAR",
-        error.message || error.code || "Error de Firebase."
-      );
-    }
-
-    return false;
+    console.error(error);
+    alert("❌ No se pudo guardar en Firebase. Revisa las reglas de Firestore.");
   }
 }
 
@@ -2202,11 +1965,10 @@ async function guardarDatos(opciones={}){
    LOGIN
 ====================================================== */
 
-
 async function iniciarSesion(){
 
-  const usuario=(document.getElementById("usuario").value||"").trim();
-  const password=document.getElementById("password").value||"";
+  const usuario=document.getElementById("usuario").value.trim();
+  const password=document.getElementById("password").value;
 
   if(!usuario || !password){
     document.getElementById("mensajeLogin").innerHTML=
@@ -2218,200 +1980,74 @@ async function iniciarSesion(){
   if(loginBtn) loginBtn.disabled=true;
 
   try{
+    let email=usuario;
 
-   let email=usuario.trim();
-
-// ELIAS conserva su acceso actual por correo.
-if(usuario.toUpperCase()==="ELIAS"){
-    email=ADMIN_EMAIL;
-}
-
-// Si escribe un correo, lo usa directamente.
-else if(usuario.includes("@")){
-    email=usuario.toLowerCase();
-}
-
-// Si escribe una cédula, busca al docente y genera su correo interno.
-else{
-    const docentePorCedula=DOCENTES.find(function(d){
-        return d.cedula.toLowerCase()===usuario.toLowerCase();
-    });
-
-    if(!docentePorCedula){
-        throw new Error("CEDULA_NO_REGISTRADA");
+    if(usuario.toUpperCase()==="ELIAS"){
+      email=ADMIN_EMAIL;
     }
 
-    email=usuario.toLowerCase().replace(/[^a-z0-9]/g,"")+
-          "@expedientes-docentes-ner7.firebaseapp.com";
-}
-
-    // Firebase Authentication comprueba correo y contraseña.
     const cred=await auth.signInWithEmailAndPassword(email,password);
     const user=cred.user;
 
-    if(user.uid===ADMIN_UID){
+    sesion={
+      uid:user.uid,
+      email:user.email||"",
+      rol:user.uid===ADMIN_UID ? "administrador" : "",
+      docenteId:null,
+      nombre:user.uid===ADMIN_UID ? "ELIAS" : (user.email||"USUARIO")
+    };
 
-      sesion={
-        uid:user.uid,
-        email:user.email||ADMIN_EMAIL,
-        rol:"administrador",
-        docenteId:null,
-        nombre:"ELIAS"
-      };
+    const perfilSnap=await db.collection("usuarios").doc(user.uid).get();
 
-      // El administrador entra de inmediato; las consultas pesadas continúan
-      // en segundo plano para que el acceso sea más rápido.
-      Promise.all([
-        cargarDatosFirebase(),
-        cargarHistorialFirebase()
-      ]).then(function(){
-        actualizarEstadisticas();
-        mostrarDocentes();
-        cargarUsuarios();
-        mostrarHistorial();
-        mostrarReportesDocentes();
-        mostrarExpedientesCompletos();
-      }).catch(function(error){
-        console.warn("Carga posterior del administrador:",error);
-      });
-
-    }else{
-
-      sesion={
-        uid:user.uid,
-        email:user.email||"",
-        rol:"",
-        docenteId:null,
-        nombre:user.email||"USUARIO"
-      };
-
-      // El perfil vincula el UID de Firebase con D001...D033.
-      const perfilSnap=await db.collection("usuarios").doc(user.uid).get();
-
-      if(!perfilSnap.exists){
-        await auth.signOut();
-        throw new Error("NO_PROFILE");
-      }
-
-      const perfil=perfilSnap.data()||{};
-
-      sesion.rol=(perfil.rol||"docente").toLowerCase();
-      sesion.docenteId=perfil.docenteId||null;
-      sesion.nombre=
-        perfil.Nombre||
-        perfil.nombre||
-        perfil.usuario||
-        user.email||
-        "USUARIO";
-
-      if(!sesion.docenteId){
-        await auth.signOut();
-        throw new Error("NO_DOCENTE_ASSIGNED");
-      }
-
-      // IMPORTANTE:
-      // El docente NO hace .collection("expedientes").get(),
-      // porque las reglas no permiten leer los 33 expedientes.
-      // Solo se consulta su expediente asignado.
-      await cargarDatosFirebase();
-      datos.historial=[];
-
+    if(perfilSnap.exists){
+      const p=perfilSnap.data()||{};
+      sesion.rol=(user.uid===ADMIN_UID ? "administrador" : (p.rol||"docente")).toLowerCase();
+      sesion.docenteId=p.docenteId||null;
+      sesion.nombre=p.Nombre||p.nombre||p.usuario||user.email||"USUARIO";
+    }else if(user.uid!==ADMIN_UID){
+      await auth.signOut();
+      throw new Error("NO_PROFILE");
     }
+
+    await cargarDatosFirebase();
+    await cargarHistorialFirebase();
 
     document.getElementById("login").classList.add("oculto");
     document.getElementById("sistema").classList.remove("oculto");
 
     aplicarPermisos();
 
-    const encabezado=document.querySelector(".usuario-header strong");
-
-    if(encabezado){
-      encabezado.textContent=
-        (sesion.rol==="administrador" ? "👑 " : "👤 ")+
-        sesion.nombre.toUpperCase()+
-        " · "+
-        sesion.rol.toUpperCase();
-    }
+    document.querySelector(".usuario-header strong").textContent=
+      (sesion.rol==="administrador" ? "👑 " : "👤 ")+
+      sesion.nombre.toUpperCase()+
+      " · "+sesion.rol.toUpperCase();
 
     mostrarDocentes();
-
     if(esAdmin()){
       cargarUsuarios();
       mostrarHistorial();
     }
-
     actualizarEstadisticas();
 
   }catch(error){
+    console.error(error);
 
-    console.error("ERROR DE INICIO DE SESIÓN:",error);
+    let mensaje="❌ Usuario o contraseña incorrectos.";
 
-    let mensaje="❌ No se pudo iniciar sesión.";
-
-    switch(error.code){
-
-      case "auth/invalid-credential":
-      case "auth/invalid-login-credentials":
-        mensaje="❌ El correo o la contraseña no coinciden con Firebase Authentication.";
-        break;
-
-      case "auth/wrong-password":
-        mensaje="❌ La contraseña no coincide con la cuenta de Firebase.";
-        break;
-
-      case "auth/user-not-found":
-        mensaje="❌ La cuenta de correo no existe en Firebase Authentication.";
-        break;
-
-      case "auth/user-disabled":
-        mensaje="❌ Esta cuenta está deshabilitada en Firebase Authentication.";
-        break;
-
-      case "auth/too-many-requests":
-        mensaje="❌ Firebase bloqueó temporalmente los intentos por demasiados intentos. Espera unos minutos.";
-        break;
-
-      case "auth/network-request-failed":
-        mensaje="❌ No hay conexión con Firebase. Revisa Internet y vuelve a intentarlo.";
-        break;
-
-      case "auth/operation-not-allowed":
-        mensaje="❌ El acceso por correo y contraseña no está habilitado en Firebase Authentication.";
-        break;
-
-      case "permission-denied":
-      case "firestore/permission-denied":
-        mensaje="❌ El usuario está autenticado, pero no tiene permiso para consultar el expediente asignado. Revisa las reglas de Firestore.";
-        break;
-
-      default:
-
-        if(error.message==="CEDULA_NO_REGISTRADA"){
-          mensaje="❌ La cédula no está registrada en la lista de docentes.";
-        }else if(error.message==="NO_PROFILE"){
-          mensaje="❌ El usuario entró correctamente, pero no tiene un perfil en la colección 'usuarios'.";
-        }else if(error.message==="NO_DOCENTE_ASSIGNED"){
-          mensaje="❌ La cuenta existe, pero todavía no está vinculada a uno de los docentes.";
-        }else if(error.message){
-          mensaje="❌ Error: "+error.message;
-        }
-
-        break;
+    if(error.message==="NO_PROFILE"){
+      mensaje="❌ Este usuario no tiene un expediente de acceso asignado.";
+    }else if(error.code==="auth/too-many-requests"){
+      mensaje="❌ Demasiados intentos. Espera unos minutos e inténtalo nuevamente.";
+    }else if(error.code==="auth/invalid-credential" || error.code==="auth/user-not-found"){
+      mensaje="❌ Correo o contraseña incorrectos.";
     }
 
     document.getElementById("mensajeLogin").innerHTML=
-      '<div class="login-error">'+esc(mensaje)+
-      '<br><small style="display:block;margin-top:8px;color:#8b1e1e;">' +
-      'Código Firebase: '+esc(error.code || "sin código")+
-      '<br>Proyecto: expedientes-docentes-ner-7</small></div>';
-
+      '<div class="login-error">'+esc(mensaje)+'</div>';
   }finally{
-
     if(loginBtn) loginBtn.disabled=false;
-
   }
 }
-
 
 
 /* ======================================================
@@ -2449,9 +2085,6 @@ document
 
 if(id==="docentes")
 mostrarDocentes();
-     
-if(id==="reportes")
-mostrarReportesDocentes();
 
 if(id==="usuarios")
 cargarUsuarios();
@@ -2658,7 +2291,6 @@ exp.foto
 
 `<img
 src="${exp.foto}"
-loading="lazy"
 alt="Foto">`
 
 :
@@ -3605,8 +3237,7 @@ return`
 
 <a
 href="${archivo.data || archivo.url || "#"}"
-target="_blank"
-rel="noopener">
+target="_blank">
 
 📄 ${esc(archivo.nombre)}
 
@@ -3621,8 +3252,7 @@ archivo.tipo.startsWith("image/")
 
 `<img
 src="${archivo.data || archivo.url}"
-class="miniatura"
-loading="lazy">`
+class="miniatura">`
 
 :
 
@@ -3664,30 +3294,43 @@ ELIMINAR
 
 function seleccionarArchivo(tipo){
 
-  const selector=document.getElementById("selectorArchivo");
+const selector=
+document.getElementById("selectorArchivo");
 
-  selector.accept=
-    tipo==="hojaVida"
-      ? ".pdf,.doc,.docx,image/*"
-      : "image/*,.pdf";
 
-  selector.onchange=function(){
+selector.accept=
+tipo==="hojaVida"
 
-    const archivo=selector.files[0];
+?
 
-    if(archivo){
-      mostrarEstadoGuardado(
-        "proceso",
-        "📎 ARCHIVO SELECCIONADO",
-        "Guardando en Firebase..."
-      );
-      guardarArchivo(tipo,archivo);
-    }
+".pdf,.doc,.docx,image/*"
 
-    selector.value="";
-  };
+:
 
-  selector.click();
+"image/*,.pdf";
+
+
+selector.onchange=function(){
+
+const archivo=
+selector.files[0];
+
+if(archivo){
+
+guardarArchivo(
+tipo,
+archivo
+);
+
+}
+
+selector.value="";
+
+};
+
+
+selector.click();
+
 }
 
 
@@ -3695,93 +3338,28 @@ function seleccionarArchivo(tipo){
    GUARDAR ARCHIVO
 ====================================================== */
 
-
 async function guardarArchivo(tipo,archivo){
 
-  if(!docenteActual || !archivo){
-    mostrarEstadoGuardado("error","❌ NO SE PUDO GUARDAR","No hay expediente seleccionado.");
-    return false;
-  }
+  if(!docenteActual || !archivo) return;
 
   const exp=obtenerExpediente(docenteActual);
 
   try{
 
-    mostrarEstadoGuardado(
-      "proceso",
-      "⏳ PREPARANDO...",
-      "Optimizando el archivo."
-    );
+    mostrarEstadoFoto("proceso","⏳ PREPARANDO FOTO","Procesando la imagen...");
 
     let archivoFinal=archivo;
 
+    // Las fotos se reducen primero, como en el flujo que ya funcionaba.
     if(archivo.type && archivo.type.startsWith("image/")){
-      archivoFinal=await comprimirImagen(archivo,1200,0.68);
+      archivoFinal=await comprimirImagen(archivo);
     }
 
-    /* FOTOS: Storage primero. Firestore solamente guarda la URL. */
-    if(storage && archivoFinal.type && archivoFinal.type.startsWith("image/")){
+    // Para una foto normal: intentar Firestore primero.
+    // Storage queda como respaldo si el archivo sigue siendo grande.
+    if(archivoFinal.size<=MAX_FIRESTORE_FILE_BYTES){
 
-      mostrarEstadoGuardado(
-        "proceso",
-        "☁️ SUBIENDO FOTO...",
-        "No cierres la página."
-      );
-
-      const nombreSeguro=(archivoFinal.name||("foto_"+Date.now()+".jpg"))
-        .replace(/[^a-zA-Z0-9._-]/g,"_");
-
-      const ruta="expedientes/"+docenteActual.id+"/"+Date.now()+"_"+nombreSeguro;
-      const ref=storage.ref().child(ruta);
-
-      await ref.put(archivoFinal,{
-        contentType:archivoFinal.type,
-        cacheControl:"public,max-age=31536000"
-      });
-
-      const url=await ref.getDownloadURL();
-
-      if(tipo==="rostro"){
-
-        exp.foto=url;
-        exp.fotoTipo=archivoFinal.type;
-        exp.fotoAlmacenamiento="storage";
-
-        agregarHistorial("Actualizó fotografía de rostro",docenteActual.id);
-
-      }else{
-
-        if(!exp.documentos[tipo]) exp.documentos[tipo]=[];
-
-        exp.documentos[tipo].push({
-          nombre:archivoFinal.name,
-          tipo:archivoFinal.type,
-          url:url,
-          almacenamiento:"storage",
-          fecha:new Date().toLocaleString()
-        });
-
-        agregarHistorial("Agregó documento: "+archivoFinal.name,docenteActual.id);
-      }
-
-    }else{
-
-      /* Respaldo: solamente para archivos suficientemente pequeños. */
-      if(archivoFinal.type && archivoFinal.type.startsWith("image/")){
-        archivoFinal=await comprimirImagen(archivoFinal,900,0.55);
-      }
-
-      if(archivoFinal.size>450*1024){
-        throw new Error(
-          "La fotografía es demasiado grande para guardarla directamente en Firestore. Firebase Storage no está disponible."
-        );
-      }
-
-      mostrarEstadoGuardado(
-        "proceso",
-        "💾 GUARDANDO...",
-        "Registrando el archivo en el expediente."
-      );
+      mostrarEstadoFoto("proceso","💾 GUARDANDO FOTO","Guardando directamente en el expediente...");
 
       const data=await archivoADataURL(archivoFinal);
 
@@ -3791,7 +3369,10 @@ async function guardarArchivo(tipo,archivo){
         exp.fotoTipo=archivoFinal.type;
         exp.fotoAlmacenamiento="firestore";
 
-        agregarHistorial("Actualizó fotografía de rostro",docenteActual.id);
+        agregarHistorial(
+          "Actualizó fotografía de rostro",
+          docenteActual.id
+        );
 
       }else{
 
@@ -3805,98 +3386,124 @@ async function guardarArchivo(tipo,archivo){
           fecha:new Date().toLocaleString()
         });
 
-        agregarHistorial("Agregó documento: "+archivoFinal.name,docenteActual.id);
+        agregarHistorial(
+          "Agregó documento: "+archivoFinal.name,
+          docenteActual.id
+        );
       }
+
+    }else if(storage){
+
+      mostrarEstadoFoto("proceso","☁️ SUBIENDO FOTO","El archivo es grande; usando Firebase Storage...");
+
+      const nombreSeguro=(archivoFinal.name||("foto_"+Date.now()+".jpg"))
+        .replace(/[^a-zA-Z0-9._-]/g,"_");
+
+      const ruta=
+        "expedientes/"+
+        docenteActual.id+
+        "/"+
+        Date.now()+
+        "_"+
+        nombreSeguro;
+
+      const ref=storage.ref().child(ruta);
+
+      await ref.put(archivoFinal,{
+        contentType:archivoFinal.type || "image/jpeg"
+      });
+
+      const url=await ref.getDownloadURL();
+
+      if(tipo==="rostro"){
+
+        exp.foto=url;
+        exp.fotoTipo=archivoFinal.type;
+        exp.fotoAlmacenamiento="storage";
+
+        agregarHistorial(
+          "Actualizó fotografía de rostro",
+          docenteActual.id
+        );
+
+      }else{
+
+        if(!exp.documentos[tipo]) exp.documentos[tipo]=[];
+
+        exp.documentos[tipo].push({
+          nombre:archivoFinal.name,
+          tipo:archivoFinal.type,
+          url:url,
+          almacenamiento:"storage",
+          fecha:new Date().toLocaleString()
+        });
+
+        agregarHistorial(
+          "Agregó documento: "+archivoFinal.name,
+          docenteActual.id
+        );
+      }
+
+    }else{
+
+      throw new Error(
+        "La foto todavía es demasiado grande para Firestore y Firebase Storage no está disponible."
+      );
     }
 
-    mostrarEstadoGuardado(
-      "proceso",
-      "🔄 CONFIRMANDO...",
-      "Guardando el expediente en Firebase."
-    );
+    mostrarEstadoFoto("proceso","🔄 CONFIRMANDO","Guardando el expediente en Firebase...");
 
-    const guardado=await guardarDatos({mostrarEstado:false});
-
-    if(!guardado){
-      throw new Error("Firebase no confirmó el guardado del expediente.");
-    }
+    await guardarDatos();
 
     renderizarExpediente();
-    mostrarDocentes();
 
-    if(esAdmin()){
-      mostrarExpedientesCompletos();
-      mostrarReportesDocentes();
-    }
-
-    mostrarEstadoGuardado(
+    mostrarEstadoFoto(
       "exito",
-      "✅ ¡GUARDADO CORRECTAMENTE!",
-      tipo==="rostro"
-        ? "La fotografía ya quedó guardada en Firebase."
-        : "El documento ya quedó guardado en Firebase."
+      "✅ FOTO GUARDADA",
+      "La fotografía quedó registrada correctamente."
     );
-
-    return true;
 
   }catch(error){
 
     console.error("Error guardando archivo:",error);
 
-    let mensaje=error.message || "No se pudo guardar el archivo.";
-
-    if(error.code==="storage/unauthorized"){
-      mensaje="Firebase Storage rechazó el archivo por permisos.";
-    }else if(error.code==="storage/unknown"){
-      mensaje="Firebase Storage presentó un error.";
-    }else if(error.code==="invalid-argument"){
-      mensaje="Firestore rechazó los datos por tamaño o formato.";
-    }
-
-    mostrarEstadoGuardado(
+    mostrarEstadoFoto(
       "error",
       "❌ NO SE GUARDÓ",
-      mensaje
+      error.message || "Revisa la conexión y Firebase."
     );
-
-    return false;
   }
 }
 
 
-/* ======================================================
-   ESTADO VISUAL
-====================================================== */
+function mostrarEstadoFoto(tipo,titulo,texto){
 
-let temporizadorEstadoGuardado=null;
+  const caja=document.getElementById("estadoFoto");
+  const tituloEl=document.getElementById("estadoFotoTitulo");
+  const textoEl=document.getElementById("estadoFotoTexto");
 
-function mostrarEstadoGuardado(tipo,titulo,subtitulo){
+  if(!caja) return;
 
-  const caja=document.getElementById("estadoGuardado");
-  const tituloEl=document.getElementById("estadoGuardadoTitulo");
-  const subEl=document.getElementById("estadoGuardadoSub");
-
-  if(!caja || !tituloEl || !subEl) return;
-
-  clearTimeout(temporizadorEstadoGuardado);
-
-  caja.classList.remove("proceso","exito","error","visible");
-  caja.classList.add(tipo);
+  caja.style.background=
+    tipo==="exito" ? "#198754" :
+    tipo==="error" ? "#dc3545" :
+    "#1557a6";
 
   tituloEl.textContent=titulo;
-  subEl.textContent=subtitulo || "";
+  textoEl.textContent=texto || "";
 
-  requestAnimationFrame(function(){
-    caja.classList.add("visible");
-  });
+  caja.style.opacity="1";
+  caja.style.transform="translate(-50%,0)";
+
+  clearTimeout(window._estadoFotoTimer);
 
   if(tipo==="exito" || tipo==="error"){
-    temporizadorEstadoGuardado=setTimeout(function(){
-      caja.classList.remove("visible");
+    window._estadoFotoTimer=setTimeout(function(){
+      caja.style.opacity="0";
+      caja.style.transform="translate(-50%,20px)";
     },4500);
   }
 }
-
 
 function archivoADataURL(archivo){
   return new Promise(function(resolve,reject){
@@ -3907,76 +3514,35 @@ function archivoADataURL(archivo){
   });
 }
 
-function comprimirImagen(archivo,max=1200,calidad=0.68){
-
+function comprimirImagen(archivo){
   return new Promise(function(resolve,reject){
-
     const lector=new FileReader();
-
     lector.onload=function(){
-
       const img=new Image();
-
       img.onload=function(){
-
-        let w=img.naturalWidth || img.width;
-        let h=img.naturalHeight || img.height;
-
+        const max=1400;
+        let w=img.width;
+        let h=img.height;
         if(w>max || h>max){
-
           const factor=Math.min(max/w,max/h);
-
-          w=Math.max(1,Math.round(w*factor));
-          h=Math.max(1,Math.round(h*factor));
+          w=Math.round(w*factor);
+          h=Math.round(h*factor);
         }
 
         const canvas=document.createElement("canvas");
-
         canvas.width=w;
         canvas.height=h;
-
-        const ctx=canvas.getContext("2d",{alpha:false});
-
-        if(!ctx){
-          reject(new Error("No se pudo preparar la imagen."));
-          return;
-        }
-
-        ctx.imageSmoothingEnabled=true;
-        ctx.imageSmoothingQuality="high";
-
-        ctx.drawImage(img,0,0,w,h);
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
 
         canvas.toBlob(function(blob){
-
-          if(!blob){
-            reject(new Error("No se pudo comprimir la imagen."));
-            return;
-          }
-
-          resolve(
-            new File(
-              [blob],
-              "foto_"+Date.now()+".jpg",
-              {type:"image/jpeg",lastModified:Date.now()}
-            )
-          );
-
-        },"image/jpeg",calidad);
-
+          if(!blob){ reject(new Error("No se pudo comprimir la imagen.")); return; }
+          resolve(new File([blob],"foto_"+Date.now()+".jpg",{type:"image/jpeg"}));
+        },"image/jpeg",0.72);
       };
-
-      img.onerror=function(){
-        reject(new Error("No se pudo leer la fotografía."));
-      };
-
+      img.onerror=reject;
       img.src=lector.result;
     };
-
-    lector.onerror=function(){
-      reject(new Error("No se pudo leer el archivo."));
-    };
-
+    lector.onerror=reject;
     lector.readAsDataURL(archivo);
   });
 }
@@ -4040,54 +3606,44 @@ async function abrirCamara(tipo){
   try{
 
     if(streamCamara){
-      streamCamara.getTracks().forEach(function(track){track.stop();});
+      streamCamara.getTracks().forEach(function(track){
+        track.stop();
+      });
       streamCamara=null;
     }
 
-    /*
-     * 4:3 para documentos: reduce el efecto de estiramiento que
-     * algunos teléfonos muestran con una vista 16:9 forzada.
-     */
-    const constraints={
-      audio:false,
-      video:{
-        facingMode:tipo==="rostro" ? {ideal:"user"} : {ideal:"environment"},
-        width:{ideal:1600,min:640},
-        height:{ideal:1200,min:480},
-        aspectRatio:{ideal:4/3},
-        resizeMode:{ideal:"crop-and-scale"}
-      }
-    };
-
     streamCamara=
-      await navigator.mediaDevices.getUserMedia(constraints);
+      await navigator.mediaDevices.getUserMedia({
+        audio:false,
+        video:{
+          facingMode:
+            tipo==="rostro"
+              ? {ideal:"user"}
+              : {ideal:"environment"},
+          width:{ideal:1600,min:640},
+          height:{ideal:1200,min:480},
+          aspectRatio:{ideal:4/3}
+        }
+      });
 
     video.srcObject=streamCamara;
-
-    video.style.transform="none";
+    video.playsInline=true;
+    video.autoplay=true;
+    video.style.width="100%";
+    video.style.height="auto";
     video.style.objectFit="contain";
+    video.style.transform="none";
 
     try{
       await video.play();
     }catch(e){}
 
-    const pista=streamCamara.getVideoTracks()[0];
-
-    /*
-     * Si el navegador informa una resolución real, la usamos.
-     * No deformamos la imagen al tomarla.
-     */
-    if(pista && pista.getSettings){
-      const s=pista.getSettings();
-      console.log("Cámara activa:",s.width,s.height,s.facingMode);
-    }
-
     document
       .getElementById("mensajeCamara")
       .textContent=
         tipo==="rostro"
-          ? "Cámara frontal activa. Mantén el rostro centrado dentro de la guía."
-          : "Cámara trasera activa. Coloca el documento plano, centrado y sin inclinar.";
+          ? "Cámara frontal activa. Mantén el rostro centrado y pulsa TOMAR FOTO."
+          : "Cámara trasera activa. Coloca el documento plano, centrado y pulsa TOMAR FOTO.";
 
   }catch(error){
 
@@ -4097,10 +3653,8 @@ async function abrirCamara(tipo){
       .getElementById("mensajeCamara")
       .textContent=
         "No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
-
   }
 }
-
 
 /* ======================================================
    TOMAR FOTO
@@ -4108,7 +3662,10 @@ async function abrirCamara(tipo){
 
 function tomarFoto(){
 
-  if(!streamCamara) return;
+  if(!streamCamara){
+    mostrarEstadoFoto("error","❌ CÁMARA NO ACTIVA","Vuelve a abrir la cámara.");
+    return;
+  }
 
   const video=document.getElementById("video");
   const canvas=document.getElementById("canvas");
@@ -4117,35 +3674,35 @@ function tomarFoto(){
   const h=video.videoHeight;
 
   if(!w || !h){
-    alert("⏳ La cámara todavía está enfocando. Espera un momento y vuelve a tomar la foto.");
+    mostrarEstadoFoto(
+      "error",
+      "❌ CÁMARA NO LISTA",
+      "Espera un momento y vuelve a pulsar TOMAR FOTO."
+    );
     return;
   }
 
+  // Conservamos exactamente la proporción real de la cámara.
   canvas.width=w;
   canvas.height=h;
 
   const ctx=canvas.getContext("2d",{alpha:false});
-
-  /*
-   * NO cambiamos la proporción de la cámara.
-   * Esto evita que documentos y rostros salgan ondulados/estirados.
-   */
   ctx.drawImage(video,0,0,w,h);
 
   const tipoGuardado=tipoCamara;
 
-  mostrarEstadoGuardado(
+  mostrarEstadoFoto(
     "proceso",
     "📸 FOTO CAPTURADA",
-    "Guardando la fotografía en Firebase..."
+    "Procesando y guardando..."
   );
 
   canvas.toBlob(function(blob){
 
     if(!blob){
-      mostrarEstadoGuardado(
+      mostrarEstadoFoto(
         "error",
-        "❌ NO SE PUDO TOMAR LA FOTO",
+        "❌ NO SE PUDO CAPTURAR",
         "Inténtalo nuevamente."
       );
       return;
@@ -4160,6 +3717,7 @@ function tomarFoto(){
       }
     );
 
+    // Cerramos la cámara SOLO después de obtener el archivo.
     cerrarCamara();
 
     guardarArchivo(
@@ -4167,9 +3725,8 @@ function tomarFoto(){
       archivo
     );
 
-  },"image/jpeg",0.88);
+  },"image/jpeg",0.90);
 }
-
 
 /* ======================================================
    CERRAR CAMARA
@@ -4373,39 +3930,54 @@ function actualizarEstadisticas(){
 let cv=0;
 let fotos=0;
 
-const listaEstadisticas=esAdmin()
-  ? DOCENTES
-  : DOCENTES.filter(function(d){
-      return d.id===sesion.docenteId;
-    });
 
-listaEstadisticas.forEach(function(docente){
+DOCENTES.forEach(function(docente){
 
-  const exp=obtenerExpediente(docente);
+const exp=
+obtenerExpediente(docente);
 
-  if(
-    exp.documentos &&
-    exp.documentos.hojaVida &&
-    exp.documentos.hojaVida.length>0
-  ){
-    cv++;
-  }
 
-  if(exp.foto){
-    fotos++;
-  }
+if(
+exp.documentos.hojaVida &&
+exp.documentos.hojaVida.length>0
+){
+
+cv++;
+
+}
+
+
+if(exp.foto){
+
+fotos++;
+
+}
 
 });
 
-document.getElementById("totalDocentes").textContent=
-  esAdmin() ? DOCENTES.length : listaEstadisticas.length;
 
-document.getElementById("totalActivos").textContent=
-  listaEstadisticas.length;
+document
+.getElementById("totalDocentes")
+.textContent=
+DOCENTES.length;
 
-document.getElementById("totalCV").textContent=cv;
 
-document.getElementById("totalFotos").textContent=fotos;
+document
+.getElementById("totalActivos")
+.textContent=
+DOCENTES.length;
+
+
+document
+.getElementById("totalCV")
+.textContent=
+cv;
+
+
+document
+.getElementById("totalFotos")
+.textContent=
+fotos;
 
 }
 
@@ -4453,59 +4025,41 @@ async function crearUsuario(){
     return;
   }
 
-  const cedula=document.getElementById("nuevoUsuario").value.trim();
+  const usuario=document.getElementById("nuevoUsuario").value.trim();
+  const password=document.getElementById("nuevaPassword").value;
   const docenteId=document.getElementById("usuarioDocente").value;
   const rol=document.getElementById("nivelAcceso").value;
 
-  if(!cedula || !docenteId){
-    alert("Seleccione el docente y escriba su número de cédula.");
+  if(!usuario || !password){
+    alert("Escriba el correo electrónico y la contraseña.");
     return;
   }
 
-  const docente=DOCENTES.find(d=>d.id===docenteId);
-
-  if(!docente){
-    alert("❌ No se encontró el docente seleccionado.");
+  if(!usuario.includes("@")){
+    alert("⚠️ El usuario debe ser un correo electrónico válido.");
     return;
   }
 
-  // ELIAS conserva su cuenta de administrador actual.
-  if(docenteId==="D016"){
-    alert("ℹ️ ELIAS ya tiene su acceso de administrador. No se crea otra cuenta.");
+  if(password.length<6){
+    alert("⚠️ La contraseña debe tener al menos 6 caracteres.");
     return;
   }
-
-  if(cedula!==docente.cedula){
-    alert("⚠️ La cédula escrita no coincide con la cédula registrada para este docente.");
-    return;
-  }
-
-  const password="123456";
-
-  // Correo interno de Firebase. El docente nunca necesita conocerlo.
-  const emailInterno=cedula.toLowerCase().replace(/[^a-z0-9]/g,"")+
-    "@expedientes-docentes-ner7.firebaseapp.com";
 
   try{
+    // App secundaria: crea el usuario sin cerrar la sesión del administrador.
     const secondaryName="SecondaryAuth_"+Date.now();
     const secondaryApp=firebase.initializeApp(firebaseConfig,secondaryName);
     const secondaryAuth=secondaryApp.auth();
 
-    const cred=await secondaryAuth.createUserWithEmailAndPassword(
-      emailInterno,
-      password
-    );
-
+    const cred=await secondaryAuth.createUserWithEmailAndPassword(usuario,password);
     const nuevoUid=cred.user.uid;
 
     await db.collection("usuarios").doc(nuevoUid).set({
-      usuario:cedula,
-      cedula:cedula,
-      correo:emailInterno,
-      correoInterno:emailInterno,
+      usuario:usuario,
+      correo:usuario,
       docenteId:docenteId,
       rol:rol.toLowerCase(),
-      Nombre:docente.nombre,
+      Nombre:(DOCENTES.find(d=>d.id===docenteId)||{}).nombre||"",
       Activo:true,
       creadoPor:sesion.uid,
       fechaCreacion:new Date().toLocaleString()
@@ -4514,27 +4068,21 @@ async function crearUsuario(){
     await secondaryAuth.signOut();
     await secondaryApp.delete();
 
-    agregarHistorial("Creó acceso por cédula para "+docente.nombre,docenteId);
+    agregarHistorial("Creó usuario "+usuario,docenteId);
 
     mostrarUsuarios();
 
     document.getElementById("nuevoUsuario").value="";
+    document.getElementById("nuevaPassword").value="";
 
-    alert(
-      "✅ ACCESO CREADO\n\n"+
-      "Docente: "+docente.nombre+"\n"+
-      "Usuario: "+cedula+"\n"+
-      "Contraseña: 123456\n\n"+
-      "El docente no necesita conocer el correo interno de Firebase."
-    );
+    alert("✅ Usuario creado correctamente.\n\nYa puede iniciar sesión con ese correo y contraseña.");
 
   }catch(error){
     console.error(error);
 
     let msg=error.message||"No se pudo crear el usuario.";
-
     if(error.code==="auth/email-already-in-use"){
-      msg="⚠️ Este docente ya tiene una cuenta de acceso creada.";
+      msg="Ese correo ya está registrado en Firebase Authentication.";
     }
 
     alert("❌ "+msg);
@@ -4600,39 +4148,11 @@ async function cargarDatosFirebase(){
 
   datos={historial:[]};
 
-  if(esAdmin()){
+  const snap=await db.collection("expedientes").get();
 
-    // Administrador: puede consultar los 33 expedientes.
-    const snap=await db.collection("expedientes").get();
-
-    snap.forEach(function(doc){
-      datos[doc.id]=doc.data()||{};
-    });
-
-  }else{
-
-    // Docente: SOLO consulta el expediente Dxxx que tiene asignado
-    // en la colección usuarios.
-    if(!sesion.docenteId){
-      throw new Error("NO_DOCENTE_ASSIGNED");
-    }
-
-    const ref=db.collection("expedientes").doc(sesion.docenteId);
-    const snap=await ref.get();
-
-    if(snap.exists){
-      datos[sesion.docenteId]=snap.data()||{};
-    }else{
-      // Si todavía no existe, se crea una estructura local vacía.
-      // Se guardará cuando el docente haga su primer cambio.
-      datos[sesion.docenteId]={
-        campos:{},
-        documentos:{},
-        foto:"",
-        actualizado:""
-      };
-    }
-  }
+  snap.forEach(function(doc){
+    datos[doc.id]=doc.data()||{};
+  });
 }
 
 async function cargarHistorialFirebase(){
@@ -4668,8 +4188,7 @@ function aplicarPermisos(){
     if(!esAdmin() && (
       txt.includes("USUARIOS") ||
       txt.includes("HISTORIAL") ||
-      txt.includes("REPORTES") ||
-      txt.includes("EXPEDIENTES COMPLETOS")
+      txt.includes("REPORTES")
     )){
       btn.style.display="none";
     }else{
@@ -4691,37 +4210,6 @@ function aplicarPermisos(){
   }
 }
 
-/* Inicio rápido: el cursor queda listo en Cédula al abrir la página. */
-window.addEventListener("load",function(){
-  const usuario=document.getElementById("usuario");
-  if(usuario){
-    usuario.focus();
-    try{ usuario.select(); }catch(e){}
-  }
-});
-
-/* ENTER EN LOGIN: cédula + contraseña -> iniciar sesión */
-document.addEventListener("keydown",function(e){
-  const login=document.getElementById("login");
-  if(!login || login.classList.contains("oculto")) return;
-
-  if(e.key==="Enter"){
-    const usuario=document.getElementById("usuario");
-    const password=document.getElementById("password");
-
-    if(document.activeElement===usuario && !password.value){
-      e.preventDefault();
-      password.focus();
-      return;
-    }
-
-    if(usuario.value.trim() && password.value){
-      e.preventDefault();
-      iniciarSesion();
-    }
-  }
-});
-
 auth.onAuthStateChanged(function(user){
   if(!user) return;
 
@@ -4729,1707 +4217,6 @@ auth.onAuthStateChanged(function(user){
 });
 
 
-function generarPDFExpediente(modo="imprimir"){
-
-  if(!esAdmin()){
-    alert("🔒 Esta función es exclusiva del administrador ELIAS.");
-    return;
-  }
-
-  if(!docenteActual){
-    alert("⚠️ Primero debes abrir el expediente del docente.");
-    return;
-  }
-
-  const exp=obtenerExpediente(docenteActual);
-  const d=obtenerDatosActuales(docenteActual);
-  const documentos=exp.documentos||{};
-
-  const escapeHTML=function(valor){
-    return String(valor==null?"":valor)
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
-  };
-
-  const dato=function(etiqueta,valor){
-    return `
-      <div class="dato">
-        <div class="etiqueta">${escapeHTML(etiqueta)}</div>
-        <div class="valor">${escapeHTML(valor||"—")}</div>
-      </div>`;
-  };
-
-  const nombresDocumentos={
-    hojaVida:"📄 Hoja de Vida",
-    titulo_maestro:"🎓 Título de Maestro / Profesor",
-    titulo_licenciatura:"🎓 Licenciatura",
-    titulo_maestria:"🎓 Maestría",
-    titulo_tecnico:"🎓 Técnico",
-    titulo_otro:"🎓 Otros títulos",
-    cedula_frente:"🪪 Frente de Cédula",
-    cedula_reverso:"🪪 Reverso de Cédula",
-    evaluacion_desempeno:"⭐ Evaluación del desempeño",
-    autoevaluacion:"⭐ Autoevaluación",
-    evaluacion_otra:"⭐ Otras evaluaciones",
-    record_documento:"📋 Récord / Constancia laboral"
-  };
-
-  const campos=exp.campos||{};
-
-  /*
-   * Cada documento se convierte en una tarjeta limpia.
-   * NO mostramos nombre del archivo ni fecha de subida:
-   * en el PDF solamente aparece el nombre formal del documento.
-   */
-  const grupos=[];
-  Object.keys(documentos).forEach(function(clave){
-    const lista=Array.isArray(documentos[clave]) ? documentos[clave] : [];
-    if(!lista.length) return;
-
-    grupos.push({
-      clave:clave,
-      titulo:nombresDocumentos[clave] || clave.replace(/_/g," ").toUpperCase(),
-      archivos:lista
-    });
-  });
-
-  const renderArchivo=function(archivo,clave){
-    const tipo=archivo.tipo||"";
-    const esImagen=tipo.startsWith("image/") && (archivo.data || archivo.url);
-    const esCedula=/cedula/i.test(clave);
-
-    if(esImagen){
-      return `
-        <div class="archivo-limpio">
-          <div class="${esCedula ? "marco-cedula" : "marco-imagen"}">
-            <img
-              src="${archivo.data || archivo.url}"
-              class="${esCedula ? "foto-cedula" : "foto-documento"}"
-              data-cedula="${esCedula ? "1" : "0"}"
-              alt="">
-          </div>
-        </div>`;
-    }
-
-    return `
-      <div class="archivo-texto">
-        <div class="archivo-titulo">📎 Documento registrado</div>
-      </div>`;
-  };
-
-  /*
-   * Las dos caras de la cédula siempre se presentan juntas
-   * en una misma hoja A4, independientemente de cómo estén
-   * guardadas como grupos separados. El resto de documentos
-   * conserva la distribución uniforme de 2 por hoja.
-   */
-  let paginasDocumentos="";
-
-  const frenteCedula=Array.isArray(documentos.cedula_frente)
-    ? documentos.cedula_frente
-    : [];
-  const reversoCedula=Array.isArray(documentos.cedula_reverso)
-    ? documentos.cedula_reverso
-    : [];
-
-  const tieneCedula=frenteCedula.length || reversoCedula.length;
-
-  if(tieneCedula){
-    const frente=frenteCedula[0];
-    const reverso=reversoCedula[0];
-
-    const renderCaraCedula=function(archivo,titulo){
-      if(!archivo) return `
-        <div class="cedula-limpia">
-          <h3>${titulo}</h3>
-          <div class="sin-datos">No hay imagen registrada.</div>
-        </div>`;
-
-      const tipo=archivo.tipo||"";
-      const esImagen=tipo.startsWith("image/") && (archivo.data || archivo.url);
-
-      if(!esImagen){
-        return `
-          <div class="cedula-limpia">
-            <h3>${titulo}</h3>
-            <div class="archivo-texto">
-              <div class="archivo-titulo">📎 Documento registrado</div>
-            </div>
-          </div>`;
-      }
-
-      return `
-        <div class="cedula-limpia">
-          <h3>${titulo}</h3>
-          <div class="marco-cedula">
-            <img
-              src="${archivo.data || archivo.url}"
-              class="foto-cedula"
-              data-cedula="1"
-              alt="">
-          </div>
-        </div>`;
-    };
-
-    paginasDocumentos+=`
-      <section class="pagina pagina-documentos">
-        <div class="encabezado">
-          <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
-          <p>🪪 Cédula de identidad</p>
-        </div>
-
-        <div class="cedulas-hoja">
-          ${renderCaraCedula(frente,"Frente de Cédula")}
-          ${renderCaraCedula(reverso,"Reverso de Cédula")}
-        </div>
-
-        <div class="pie">
-          ${escapeHTML(d.nombre)} · CÉDULA DE IDENTIDAD
-        </div>
-      </section>`;
-  }
-
-  grupos.forEach(function(grupo){
-
-    /* La cédula ya fue colocada arriba en una sola hoja.
-       Su diseño actual se conserva sin cambios. */
-    if(grupo.clave==="cedula_frente" || grupo.clave==="cedula_reverso") return;
-
-    /* Cada archivo ocupa una página completa para evitar bloques partidos. */
-    grupo.archivos.forEach(function(archivo){
-
-      const tipo=archivo.tipo||"";
-      const esImagen=tipo.startsWith("image/") && (archivo.data || archivo.url);
-      const esRecord=grupo.clave==="record_documento";
-
-      if(esImagen){
-        paginasDocumentos+=`
-          <section class="pagina pagina-documento-completo ${esRecord ? "pagina-record-completo" : ""}">
-            <div class="encabezado encabezado-documento">
-              <h1>${escapeHTML(grupo.titulo)}</h1>
-              <p>${escapeHTML(d.nombre)}</p>
-            </div>
-            <div class="foto-hoja-completa">
-              <img src="${archivo.data || archivo.url}" class="foto-hoja" alt="">
-            </div>
-            <div class="pie">
-              ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
-            </div>
-          </section>`;
-      }else{
-        paginasDocumentos+=`
-          <section class="pagina pagina-documento-completo">
-            <div class="encabezado encabezado-documento">
-              <h1>${escapeHTML(grupo.titulo)}</h1>
-              <p>${escapeHTML(d.nombre)}</p>
-            </div>
-            <div class="archivo-no-imagen">
-              <div class="archivo-titulo">📎 Documento registrado</div>
-              <p>El archivo está registrado en el expediente.</p>
-            </div>
-            <div class="pie">
-              ${escapeHTML(d.nombre)} · ${escapeHTML(grupo.titulo)}
-            </div>
-          </section>`;
-      }
-    });
-  });
-
-  if(!grupos.length){
-    paginasDocumentos=`
-      <section class="pagina pagina-documentos">
-        <div class="encabezado">
-          <h1>DOCUMENTOS DEL EXPEDIENTE</h1>
-          <p>Documentación registrada en el sistema</p>
-        </div>
-        <div class="sin-datos">No hay documentos registrados actualmente.</div>
-        <div class="pie">EXPEDIENTE DOCENTE · DOCUMENTOS</div>
-      </section>`;
-  }
-
-  const fotoPortada=exp.foto
-    ? `<img class="foto-portada" src="${exp.foto}" alt="Fotografía del docente">`
-    : `<div class="sin-foto">📷<br>Sin fotografía registrada</div>`;
-
-  const nombreArchivo="Expediente-"+
-    String(d.nombre||"Docente")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g,"")
-      .replace(/[^a-zA-Z0-9]+/g,"-")
-      .replace(/^-+|-+$/g,"")+
-    ".pdf";
-
-  const contenido=`
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Expediente Docente - ${escapeHTML(d.nombre)}</title>
-
-<style>
-
-@page{
-  size:A4;
-  margin:0;
-}
-
-*{
-  box-sizing:border-box;
-}
-
-html,body{
-  margin:0;
-  padding:0;
-  width:210mm;
-  background:#fff;
-}
-
-body{
-  font-family:Arial,Helvetica,sans-serif;
-  color:#17243a;
-  line-height:1.5;
-  font-size:12px;
-}
-
-.pagina{
-  width:210mm;
-  height:297mm;
-  min-height:297mm;
-  max-height:297mm;
-  padding:16mm 17mm 19mm 17mm;
-  margin:0;
-  background:#fff;
-  position:relative;
-  overflow:hidden;
-  break-inside:avoid;
-  page-break-inside:avoid;
-  break-after:page;
-  page-break-after:always;
-}
-
-.pagina:last-of-type{
-  break-after:auto;
-  page-break-after:auto;
-}
-
-.encabezado{
-  border-bottom:2px solid #1557a6;
-  padding-bottom:7px;
-  margin-bottom:12px;
-}
-
-.encabezado h1{
-  margin:0;
-  color:#1557a6;
-  font-size:21px;
-  line-height:1.15;
-}
-
-.encabezado p{
-  margin:4px 0 0;
-  color:#68778a;
-  font-size:11px;
-}
-
-.portada{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-
-.logo{
-  font-size:58px;
-  margin-bottom:8px;
-}
-
-.portada h1{
-  color:#1557a6;
-  font-size:31px;
-  font-weight:800;
-  letter-spacing:.7px;
-  margin:5px 0;
-}
-
-.portada h2{
-  color:#0b3d78;
-  font-size:22px;
-  margin:8px 0;
-}
-
-.portada .institucion{
-  font-size:14px;
-  line-height:1.5;
-  color:#555;
-  margin-bottom:13px;
-}
-
-.pensamiento-dario{
-  width:150mm;
-  margin:8px 0;
-  padding:9px 15px;
-  color:#1557a6;
-  font-size:13px;
-  line-height:1.5;
-  font-style:italic;
-  border-top:1px solid #d9b44a;
-  border-bottom:1px solid #d9b44a;
-}
-
-.pensamiento-dario span{
-  display:block;
-  margin-top:5px;
-  font-size:12px;
-  font-weight:bold;
-  font-style:normal;
-}
-
-.foto-portada{
-  width:58mm;
-  height:72mm;
-  object-fit:cover;
-  border:2px solid #1557a6;
-  border-radius:7px;
-  margin:10px;
-}
-
-.sin-foto{
-  width:58mm;
-  height:72mm;
-  border:2px dashed #aaa;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  color:#777;
-  margin:10px;
-}
-
-.fecha{
-  margin-top:12px;
-  font-size:10px;
-  color:#666;
-}
-
-h2{
-  color:#1557a6;
-  border-bottom:1.5px solid #1557a6;
-  padding-bottom:5px;
-  margin:10px 0;
-  font-size:17px;
-}
-
-h3{
-  color:#1557a6;
-  margin:8px 0 5px;
-  font-size:14px;
-}
-
-.tabla-datos{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:7px;
-}
-
-/* Fecha de ingreso: bloque amplio y uniforme */
-.fecha-ingreso-dato{
-  grid-template-columns:1fr !important;
-  width:100%;
-  margin-bottom:8px;
-}
-
-.fecha-ingreso-dato .dato{
-  width:100%;
-  min-height:56px;
-  box-sizing:border-box;
-  padding:11px 13px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
-
-.fecha-ingreso-dato .etiqueta{
-  font-size:10px !important;
-  margin-bottom:4px;
-}
-
-.fecha-ingreso-dato .valor{
-  font-size:13px !important;
-}
-
-.dato{
-  border:1px solid #d9e2ec;
-  border-radius:6px;
-  padding:7px 8px;
-  background:#f8fafc;
-  min-height:42px;
-}
-
-.etiqueta{
-  font-size:8px;
-  color:#68778a;
-  text-transform:uppercase;
-  margin-bottom:2px;
-}
-
-.valor{
-  font-size:11px;
-  font-weight:bold;
-  word-break:break-word;
-}
-
-.observaciones{
-  border:1px solid #d9e2ec;
-  border-radius:7px;
-  background:#f8fafc;
-  padding:10px;
-  min-height:58px;
-  white-space:pre-wrap;
-  overflow:hidden;
-}
-
-.profesional-grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:9px;
-}
-
-.profesional-box{
-  border:1px solid #d9e2ec;
-  border-radius:7px;
-  background:#f8fafc;
-  padding:9px 10px;
-  min-height:62px;
-  overflow:hidden;
-}
-
-.profesional-box strong{
-  display:block;
-  color:#1557a6;
-  font-size:12px;
-  margin-bottom:4px;
-}
-
-.profesional-box div{
-  font-size:11px;
-  white-space:pre-wrap;
-  overflow:hidden;
-}
-
-.documentos-hoja{
-  width:100%;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.archivo-limpio{
-  width:100%;
-  height:108mm;
-  border:1px solid #d9e2ec;
-  border-radius:8px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  padding:7mm;
-}
-
-.marco-imagen{
-  width:100%;
-  height:94mm;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-}
-
-.marco-cedula{
-  width:100%;
-  height:82mm;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-}
-
-.cedulas-hoja{
-  width:100%;
-  display:flex;
-  flex-direction:column;
-  gap:8mm;
-}
-
-.cedula-limpia{
-  width:100%;
-  height:82mm;
-  border:1px solid #d9e2ec;
-  border-radius:8px;
-  background:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  padding:5mm 8mm;
-}
-
-.cedula-limpia h3{
-  width:100%;
-  margin:0 0 3mm;
-  color:#1557a6;
-  font-size:12px;
-  line-height:1.5;
-  text-align:left;
-}
-
-.cedula-limpia .marco-cedula{
-  height:66mm;
-}
-
-.foto-documento{
-  display:block;
-  max-width:100%;
-  max-height:100%;
-  width:auto;
-  height:auto;
-  object-fit:contain;
-}
-
-.foto-cedula{
-  display:block;
-  max-width:100%;
-  max-height:100%;
-  width:auto;
-  height:auto;
-  object-fit:contain;
-}
-
-.foto-cedula.vertical{
-  width:64mm;
-  height:150mm;
-  max-width:none;
-  max-height:none;
-  object-fit:contain;
-  transform:rotate(-90deg);
-}
-
-.archivo-texto{
-  height:35mm;
-  border:1px solid #d9e2ec;
-  border-radius:8px;
-  background:#f8fafc;
-  display:flex;
-  align-items:center;
-  padding:12px;
-}
-
-.archivo-titulo{
-  font-weight:bold;
-  color:#1557a6;
-  font-size:12px;
-}
-
-.sin-datos{
-  padding:20px;
-  border:1px dashed #aaa;
-  color:#777;
-  text-align:center;
-  border-radius:8px;
-}
-
-.pie{
-  position:absolute;
-  bottom:8mm;
-  left:17mm;
-  right:17mm;
-  border-top:1px solid #d9e2ec;
-  padding-top:4px;
-  text-align:center;
-  font-size:8px;
-  color:#7b8794;
-  background:#fff;
-}
-
-/* Tipografía del expediente: Arial 12 e interlineado 1.5 */
-.pagina,
-.pagina p,
-.pagina div,
-.pagina span,
-.pagina strong,
-.pagina small,
-.pagina label,
-.pagina li,
-.pagina td,
-.pagina th,
-.pagina .institucion,
-.pagina .pensamiento-dario,
-.pagina .fecha,
-.pagina .dato,
-.pagina .etiqueta,
-.pagina .valor,
-.pagina .observaciones,
-.pagina .profesional-box,
-.pagina .profesional-box div,
-.pagina .archivo-titulo,
-.pagina .archivo-texto,
-.pagina .sin-datos {
-  font-family: Arial, Helvetica, sans-serif !important;
-  font-size: 12px !important;
-  line-height: 1.5 !important;
-}
-
-/* Ajustes visuales finales de la portada y espaciado profesional */
-.portada .logo{
-  font-size:70px !important;
-  line-height:1 !important;
-  margin:0 0 18px !important;
-}
-
-.portada h1{
-  font-size:36px !important;
-  line-height:1.2 !important;
-  letter-spacing:1px;
-  margin:8px 0 12px !important;
-}
-
-.portada h2{
-  font-size:26px !important;
-  line-height:1.3 !important;
-  margin:10px 0 12px !important;
-}
-
-.portada .institucion{
-  font-size:15px !important;
-  line-height:1.5 !important;
-  margin:4px 0 18px !important;
-}
-
-.portada .pensamiento-dario{
-  font-size:14px !important;
-  line-height:1.5 !important;
-  padding:12px 18px !important;
-  margin:12px 0 16px !important;
-}
-
-.portada .pensamiento-dario span{
-  font-size:13px !important;
-  line-height:1.5 !important;
-  margin-top:8px !important;
-}
-
-.portada .foto-portada,
-.portada .sin-foto{
-  margin:14px !important;
-}
-
-.portada > div:not(.logo):not(.institucion):not(.pensamiento-dario):not(.fecha):not(.pie){
-  font-size:12px !important;
-  line-height:1.5 !important;
-}
-
-/* Más aire dentro de los bloques de información profesional, manteniendo interlineado 1.5 */
-.profesional-grid{
-  gap:12px !important;
-}
-
-.profesional-box{
-  padding:12px 14px !important;
-}
-
-.profesional-box strong{
-  margin-bottom:7px !important;
-  font-size:13px !important;
-  line-height:1.5 !important;
-}
-
-.profesional-box div{
-  font-size:12px !important;
-  line-height:1.5 !important;
-  padding-top:1px;
-}
-
-
-/* ===== PORTADA PREMIUM A4 — conserva todo el contenido existente ===== */
-.portada{
-  position:relative !important;
-  isolation:isolate;
-  justify-content:flex-start !important;
-  padding:18mm 17mm 18mm !important;
-  background:
-    radial-gradient(circle at 50% 10%, rgba(245,190,55,.10), transparent 25%),
-    linear-gradient(180deg,#ffffff 0%,#fbfdff 100%) !important;
-  border:2.2px solid #123c78 !important;
-  box-shadow:
-    inset 0 0 0 2px #d9b44a,
-    inset 0 0 0 5px #fff,
-    inset 0 0 0 6.5px #123c78 !important;
-}
-
-.portada::before{
-  content:"";
-  position:absolute;
-  inset:7mm;
-  border:1px solid rgba(217,180,74,.75);
-  pointer-events:none;
-  z-index:-1;
-}
-
-.portada::after{
-  content:"✦";
-  position:absolute;
-  top:8mm;
-  left:50%;
-  transform:translateX(-50%);
-  color:#d9b44a;
-  font-size:22px;
-  line-height:1;
-  background:#fff;
-  padding:0 7px;
-}
-
-.portada .logo{
-  font-size:86px !important;
-  line-height:1 !important;
-  margin:5mm 0 4mm !important;
-  filter:drop-shadow(0 3px 2px rgba(18,60,120,.18));
-}
-
-.portada h1{
-  width:100%;
-  color:#1557a6 !important;
-  font-size:40px !important;
-  font-weight:900 !important;
-  line-height:1.08 !important;
-  letter-spacing:1.4px !important;
-  margin:2mm 0 3mm !important;
-  padding:0 0 3mm !important;
-  border-bottom:3px solid #d9b44a !important;
-  text-shadow:0 2px 0 #dbe9f8;
-}
-
-.portada h1::before,
-.portada h1::after{
-  content:"◆";
-  color:#d9b44a;
-  font-size:11px;
-  vertical-align:middle;
-  margin:0 8px;
-}
-
-.portada h2{
-  color:#0b3d78 !important;
-  font-size:27px !important;
-  font-weight:800 !important;
-  line-height:1.35 !important;
-  margin:4mm 0 3mm !important;
-  padding:0 5mm 3mm !important;
-  border-bottom:1px solid #b8cbe0;
-}
-
-.portada .institucion{
-  width:150mm;
-  max-width:100%;
-  margin:3mm 0 4mm !important;
-  padding:5mm 8mm !important;
-  border:2px solid #d9b44a;
-  border-radius:12px;
-  background:linear-gradient(135deg,#f7fbff,#eef5fc);
-  color:#17324d !important;
-  font-size:16px !important;
-  font-weight:600;
-  line-height:1.65 !important;
-  box-shadow:0 2px 8px rgba(18,60,120,.08);
-}
-
-.portada .institucion::before{
-  content:"🏫";
-  display:block;
-  font-size:28px;
-  line-height:1;
-  margin-bottom:2mm;
-}
-
-.portada .pensamiento-dario{
-  width:154mm !important;
-  max-width:100%;
-  margin:3mm 0 4mm !important;
-  padding:4mm 9mm !important;
-  color:#1557a6 !important;
-  font-size:15px !important;
-  line-height:1.65 !important;
-  border-top:2px solid #d9b44a !important;
-  border-bottom:2px solid #d9b44a !important;
-  position:relative;
-}
-
-.portada .pensamiento-dario::before,
-.portada .pensamiento-dario::after{
-  content:"❧";
-  color:#d9b44a;
-  font-size:21px;
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-}
-.portada .pensamiento-dario::before{left:3mm;}
-.portada .pensamiento-dario::after{right:3mm;transform:translateY(-50%) scaleX(-1);}
-
-.portada .pensamiento-dario span{
-  margin-top:2mm !important;
-  font-size:14px !important;
-  color:#0b3d78;
-}
-
-.portada .foto-portada,
-.portada .sin-foto{
-  width:52mm !important;
-  height:62mm !important;
-  margin:3mm auto 2mm !important;
-  border:3px solid #1557a6 !important;
-  border-radius:10px !important;
-  box-shadow:0 3px 12px rgba(18,60,120,.18);
-  object-fit:cover;
-}
-
-.portada > div:not(.logo):not(.institucion):not(.pensamiento-dario):not(.fecha):not(.pie){
-  margin-top:2mm !important;
-  font-size:13px !important;
-  line-height:1.5 !important;
-}
-
-.portada .fecha{
-  margin-top:3mm !important;
-  font-size:12px !important;
-  line-height:1.5 !important;
-  color:#66788b !important;
-}
-
-.portada .pie{
-  left:17mm !important;
-  right:17mm !important;
-  bottom:9mm !important;
-  border-top:2px solid #d9b44a !important;
-  padding-top:3mm !important;
-  font-size:9px !important;
-  color:#1557a6 !important;
-  font-weight:700;
-  letter-spacing:.4px;
-}
-
-/* ===== UNA HOJA POR FOTO / DOCUMENTO ===== */
-.pagina-documento-completo{
-  padding:12mm 12mm 17mm 12mm;
-}
-.encabezado-documento{margin-bottom:7mm;}
-.foto-hoja-completa{
-  position:absolute;
-  left:8mm;
-  right:8mm;
-  top:30mm;
-  bottom:13mm;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-}
-.foto-hoja{
-  display:block;
-  width:auto;
-  height:auto;
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-}
-.pagina-record-completo .encabezado{display:none;}
-.pagina-record-completo .foto-hoja-completa{
-  left:5mm;
-  right:5mm;
-  top:5mm;
-  bottom:5mm;
-}
-.archivo-no-imagen{
-  position:absolute;
-  left:20mm;
-  right:20mm;
-  top:70mm;
-  bottom:70mm;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  border:1px dashed #b8c5d3;
-  border-radius:10px;
-  background:#f8fafc;
-}
-
-/* Los títulos conservan su jerarquía visual */
-.pagina h1,
-.pagina h2,
-.pagina h3 {
-  font-family: Arial, Helvetica, sans-serif !important;
-}
-
-@media print{
-
-  @page{
-    size:A4;
-    margin:0;
-  }
-
-  html,body{
-    width:210mm;
-    margin:0;
-    padding:0;
-    background:#fff;
-  }
-
-  .pagina{
-    width:210mm;
-    height:297mm;
-    min-height:297mm;
-    max-height:297mm;
-    overflow:hidden;
-    margin:0;
-    padding:16mm 17mm 19mm 17mm;
-    break-after:page;
-    page-break-after:always;
-  }
-
-  .pagina:last-of-type{
-    break-after:auto;
-    page-break-after:auto;
-  }
-
-  .pagina-documento-completo .foto-hoja-completa{
-    left:8mm;
-    right:8mm;
-    top:12mm;
-    bottom:10mm;
-  }
-
-  .pagina-documento-completo .foto-hoja{
-    max-width:100%;
-    max-height:100%;
-    width:auto;
-    height:auto;
-    object-fit:contain;
-  }
-
-  .pagina-record-completo .foto-hoja-completa{
-    left:5mm;
-    right:5mm;
-    top:5mm;
-    bottom:5mm;
-  }
-}
-
-</style>
-</head>
-
-<body>
-
-<section class="pagina portada">
-
-  <div class="logo">📂</div>
-
-  <h1>EXPEDIENTE DOCENTE</h1>
-
-  <h2>${escapeHTML(d.nombre)}</h2>
-
-  <div class="institucion">
-    MINED · Rancho Grande
-    <br>
-    Sistema de Expedientes Docentes NER 7
-  </div>
-
-  <div class="pensamiento-dario">
-    “Si pequeña es la Patria, uno grande la sueña.”
-    <br>
-    <span>— Rubén Darío</span>
-  </div>
-
-  ${fotoPortada}
-
-  <div>
-    <strong>Cédula:</strong> ${escapeHTML(d.cedula||"—")}
-  </div>
-
-  <div class="fecha">
-    Expediente generado por el administrador
-    <br>
-    ${new Date().toLocaleString("es-NI")}
-  </div>
-
-  <div class="pie">
-    EXPEDIENTE DOCENTE · NER 7 · MINED RANCHO GRANDE
-  </div>
-
-</section>
-
-<section class="pagina">
-
-  <div class="encabezado">
-    <h1>EXPEDIENTE DOCENTE</h1>
-    <p>Ficha de información personal y laboral</p>
-  </div>
-
-  <h2>1. Datos del docente</h2>
-
-  <div class="tabla-datos">
-    ${dato("Nombre completo",d.nombre)}
-    ${dato("Cédula",d.cedula)}
-    ${dato("Teléfono",d.telefono)}
-    ${dato("Correo",d.correo)}
-    ${dato("Centro educativo",d.centro)}
-    ${dato("Modalidad",d.modalidad)}
-    ${dato("Especialidad",d.especialidad)}
-    ${dato("INSS",d.inss)}
-    ${dato("Código docente",d.codigo)}
-    ${dato("Combinación",d.combinacion)}
-  </div>
-
-  <h2>2. Información adicional</h2>
-
-  <div class="observaciones">
-    ${escapeHTML(
-      campos.observaciones ||
-      campos.record_observaciones ||
-      "No hay observaciones registradas."
-    )}
-  </div>
-
-  <div class="pie">
-    ${escapeHTML(d.nombre)} · Cédula ${escapeHTML(d.cedula||"—")}
-  </div>
-
-</section>
-
-<section class="pagina">
-
-  <div class="encabezado">
-    <h1>EXPEDIENTE DOCENTE</h1>
-    <p>Información profesional y trayectoria laboral</p>
-  </div>
-
-  <h2>3. Información profesional</h2>
-
-  <div class="tabla-datos fecha-ingreso-dato">
-    ${dato("Fecha de ingreso",d.ingreso||"")}
-  </div>
-
-  <div class="profesional-grid">
-
-    <div class="profesional-box">
-      <strong>Dirección domiciliaria</strong>
-      <div>${escapeHTML(d.direccion||"No registrada.")}</div>
-    </div>
-
-    <div class="profesional-box">
-      <strong>Formación académica</strong>
-      <div>${escapeHTML(d.formacion||"No registrada.")}</div>
-    </div>
-
-    <div class="profesional-box">
-      <strong>Experiencia laboral</strong>
-      <div>${escapeHTML(d.experiencia||"No registrada.")}</div>
-    </div>
-
-  </div>
-
-  <div class="pie">
-    EXPEDIENTE DOCENTE · INFORMACIÓN PROFESIONAL
-  </div>
-
-</section>
-
-<section class="pagina">
-
-  <div class="encabezado">
-    <h1>EXPEDIENTE DOCENTE</h1>
-    <p>Información profesional complementaria</p>
-  </div>
-
-  <div class="profesional-grid">
-
-    <div class="profesional-box">
-      <strong>Capacitaciones</strong>
-      <div>${escapeHTML(d.capacitaciones||"No registradas.")}</div>
-    </div>
-
-    <div class="profesional-box">
-      <strong>Referencias personales</strong>
-      <div>${escapeHTML(d.referencias||"No registradas.")}</div>
-    </div>
-
-  </div>
-
-  <h2>Observaciones</h2>
-
-  <div class="observaciones">
-    ${escapeHTML(
-      campos.record_observaciones ||
-      "No hay observaciones registradas."
-    )}
-  </div>
-
-  <div class="pie">
-    EXPEDIENTE DOCENTE · INFORMACIÓN COMPLEMENTARIA
-  </div>
-
-</section>
-
-${paginasDocumentos}
-
-<section class="pagina">
-
-  <div class="encabezado">
-    <h1>EVALUACIONES</h1>
-    <p>Registro de evaluaciones y observaciones</p>
-  </div>
-
-  <h2>Evaluaciones registradas</h2>
-
-  <div class="observaciones">
-    ${escapeHTML(
-      campos.evaluacion_notas ||
-      "No hay observaciones o puntajes registrados."
-    )}
-  </div>
-
-  <h2>Documento de evaluación</h2>
-
-  ${
-    documentos.evaluacion_desempeno &&
-    documentos.evaluacion_desempeno.length
-    ?
-    `<div class="archivo-texto">
-      <div class="archivo-titulo">📎 Evaluación del desempeño registrada</div>
-    </div>`
-    :
-    `<div class="sin-datos">No hay evaluación del desempeño registrada.</div>`
-  }
-
-  <div class="pie">
-    EXPEDIENTE DOCENTE · EVALUACIONES
-  </div>
-
-</section>
-
-<section class="pagina">
-
-  <div class="encabezado">
-    <h1>RÉCORD PROFESIONAL</h1>
-    <p>Información profesional y laboral</p>
-  </div>
-
-  <h2>Historial profesional / observaciones</h2>
-
-  <div class="observaciones">
-    ${escapeHTML(
-      campos.record_observaciones ||
-      campos.historial_profesional ||
-      "No hay información registrada."
-    )}
-  </div>
-
-  <div class="pie">
-    EXPEDIENTE DOCENTE · RÉCORD PROFESIONAL
-  </div>
-
-</section>
-
-<section class="pagina portada">
-
-  <div class="logo">📁</div>
-
-  <h1>EXPEDIENTE COMPLETO</h1>
-
-  <h2>${escapeHTML(d.nombre)}</h2>
-
-  <p>
-    El presente expediente fue generado desde el
-    Sistema de Expedientes Docentes NER 7.
-  </p>
-
-  <p>MINED · Rancho Grande</p>
-
-  <div class="fecha">${new Date().toLocaleString("es-NI")}</div>
-
-  <div class="pie">
-    Documento generado exclusivamente por el administrador ELIAS.
-  </div>
-
-</section>
-
-</body>
-</html>
-`;
-
-  /* =====================================================
-     PREPARAR PDF RASTERIZADO A4
-     ===================================================== */
-
-  const generarPDFComoImagen=function(abrirDespues,imprimirDespues){
-
-    if(typeof html2canvas==="undefined"){
-      alert("⚠️ No se cargó html2canvas. Recarga la página y vuelve a intentarlo.");
-      return;
-    }
-
-    if(typeof window.jspdf==="undefined" || !window.jspdf.jsPDF){
-      alert("⚠️ No se cargó jsPDF. Recarga la página y vuelve a intentarlo.");
-      return;
-    }
-
-    const ventana=abrirDespues || imprimirDespues
-      ? window.open("","_blank","width=1000,height=800")
-      : null;
-
-    if((abrirDespues || imprimirDespues) && !ventana){
-      alert("⚠️ Chrome bloqueó la ventana. Permite las ventanas emergentes para este sitio.");
-      return;
-    }
-
-    const marco=document.createElement("iframe");
-    marco.style.position="fixed";
-    marco.style.left="-20000px";
-    marco.style.top="0";
-    marco.style.width="794px";
-    marco.style.height="1123px";
-    marco.style.border="0";
-    marco.setAttribute("aria-hidden","true");
-    document.body.appendChild(marco);
-
-    const docMarco=marco.contentDocument || marco.contentWindow.document;
-    docMarco.open();
-    docMarco.write(contenido);
-    docMarco.close();
-
-    const esperarRecursos=function(){
-
-      const imagenes=Array.from(docMarco.images||[]);
-
-      const promesas=imagenes.map(function(img){
-
-        return new Promise(function(resolve){
-
-          if(img.complete && img.naturalWidth>0){
-            resolve();
-            return;
-          }
-
-          img.addEventListener("load",resolve,{once:true});
-          img.addEventListener("error",resolve,{once:true});
-
-          setTimeout(resolve,10000);
-        });
-      });
-
-      const fuentes=docMarco.fonts && docMarco.fonts.ready
-        ? docMarco.fonts.ready
-        : Promise.resolve();
-
-      return Promise.all([fuentes,...promesas]);
-    };
-
-    const normalizarFotos=function(){
-
-      const fotos=Array.from(docMarco.querySelectorAll(".foto-cedula"));
-
-      fotos.forEach(function(img){
-
-        if(
-          img.naturalHeight > img.naturalWidth * 1.08
-        ){
-          img.classList.add("vertical");
-        }
-      });
-    };
-
-    esperarRecursos()
-      .then(function(){
-
-        normalizarFotos();
-
-        return new Promise(function(resolve){
-          setTimeout(resolve,350);
-        });
-
-      })
-      .then(function(){
-
-        const paginas=Array.from(docMarco.querySelectorAll(".pagina"));
-
-        if(!paginas.length){
-          throw new Error("No se encontraron páginas del expediente.");
-        }
-
-        const pdf=new window.jspdf.jsPDF({
-          unit:"mm",
-          format:"a4",
-          orientation:"portrait",
-          compress:true
-        });
-
-        let trabajos=Promise.resolve();
-
-        paginas.forEach(function(pagina,index){
-
-          trabajos=trabajos.then(function(){
-
-            /*
-             * 794 × 1123 px = hoja A4 aproximada a 96 DPI.
-             * Todo se rasteriza dentro de una sola hoja.
-             */
-            pagina.style.width="794px";
-            pagina.style.height="1123px";
-            pagina.style.minHeight="1123px";
-            pagina.style.maxHeight="1123px";
-            pagina.style.margin="0";
-            pagina.style.padding="60px 64px 72px 64px";
-            pagina.style.boxSizing="border-box";
-            pagina.style.overflow="hidden";
-            pagina.style.background="#ffffff";
-
-            return html2canvas(pagina,{
-              scale:2,
-              useCORS:true,
-              allowTaint:true,
-              backgroundColor:"#ffffff",
-              logging:false,
-              width:794,
-              height:1123,
-              windowWidth:794,
-              windowHeight:1123,
-              scrollX:0,
-              scrollY:0
-            }).then(function(canvas){
-
-              if(index>0){
-                pdf.addPage("a4","portrait");
-              }
-
-              const imagen=canvas.toDataURL("image/jpeg",0.97);
-
-              pdf.addImage(
-                imagen,
-                "JPEG",
-                0,
-                0,
-                210,
-                297,
-                undefined,
-                "FAST"
-              );
-            });
-          });
-        });
-
-        return trabajos.then(function(){
-
-          if(abrirDespues){
-
-            const blob=pdf.output("blob");
-            const url=URL.createObjectURL(blob);
-
-            ventana.location.href=url;
-
-            setTimeout(function(){
-              try{
-                ventana.focus();
-              }catch(e){}
-            },800);
-
-            return;
-          }
-
-          if(imprimirDespues){
-
-            const blob=pdf.output("blob");
-            const url=URL.createObjectURL(blob);
-
-            ventana.location.href=url;
-
-            /*
-             * El visor PDF de Chrome controla la impresión.
-             * Dejamos el PDF abierto exactamente como se generó,
-             * sin volver a maquetarlo con HTML.
-             */
-            setTimeout(function(){
-              try{
-                ventana.focus();
-              }catch(e){}
-            },1000);
-
-            return;
-          }
-
-          pdf.save(nombreArchivo);
-
-        });
-
-      })
-      .catch(function(error){
-
-        console.error("PDF:",error);
-
-        if(ventana){
-          try{ ventana.close(); }catch(e){}
-        }
-
-        alert(
-          "❌ No se pudo generar el PDF correctamente. "+
-          (error && error.message ? error.message : "")
-        );
-
-      })
-      .finally(function(){
-        marco.remove();
-      });
-  };
-
-  if(modo==="abrir"){
-    generarPDFComoImagen(true,false);
-    return;
-  }
-
-  if(modo==="descargar"){
-    generarPDFComoImagen(false,false);
-    return;
-  }
-
-  if(modo==="imprimir"){
-    generarPDFComoImagen(false,true);
-    return;
-  }
-}
-
-function evaluarExpedienteCompleto(docente){
-  const exp=obtenerExpediente(docente);
-  const d=obtenerDatosActuales(docente);
-  const documentos=exp.documentos||{};
-  const faltantes=[];
-
-  const tieneArchivo=function(clave){
-    return Array.isArray(documentos[clave]) && documentos[clave].length>0;
-  };
-
-  if(!String(d.nombre||"").trim()) faltantes.push("Nombre completo");
-  if(!String(d.cedula||"").trim()) faltantes.push("Cédula");
-  if(!String(d.telefono||"").trim()) faltantes.push("Teléfono");
-  if(!String(d.inss||"").trim()) faltantes.push("INSS");
-  if(!String(d.centro||"").trim()) faltantes.push("Centro educativo");
-  if(!String(d.modalidad||"").trim()) faltantes.push("Modalidad");
-  if(!String(d.formacion||"").trim()) faltantes.push("Formación académica");
-  if(!String(d.experiencia||"").trim()) faltantes.push("Experiencia laboral");
-
-  if(!exp.foto) faltantes.push("Foto de rostro");
-  if(!tieneArchivo("hojaVida")) faltantes.push("Hoja de vida");
-  if(!tieneArchivo("cedula_frente")) faltantes.push("Frente de cédula");
-  if(!tieneArchivo("cedula_reverso")) faltantes.push("Reverso de cédula");
-
-  const tieneTitulo =
-    tieneArchivo("titulo_maestro") ||
-    tieneArchivo("titulo_licenciatura") ||
-    tieneArchivo("titulo_maestria") ||
-    tieneArchivo("titulo_tecnico") ||
-    tieneArchivo("titulo_otro");
-
-  if(!tieneTitulo) faltantes.push("Título académico");
-  if(!tieneArchivo("record_documento")) faltantes.push("Récord profesional");
-
-  if(!tieneArchivo("evaluacion_desempeno") &&
-     !tieneArchivo("autoevaluacion") &&
-     !tieneArchivo("evaluacion_otra")){
-    faltantes.push("Evaluación");
-  }
-
-  return {
-    completo:faltantes.length===0,
-    faltantes:faltantes
-  };
-}
-
-function mostrarExpedientesCompletos(){
-
-  if(!esAdmin()) return;
-
-  const contenedor=document.getElementById("listaExpedientesCompletos");
-  if(!contenedor) return;
-
-  const lista=DOCENTES.map(function(docente){
-    return {
-      docente:docente,
-      d:obtenerDatosActuales(docente),
-      estado:evaluarExpedienteCompleto(docente)
-    };
-  });
-
-  const completos=lista.filter(function(x){return x.estado.completo;}).length;
-  const incompletos=lista.length-completos;
-
-  let html=`
-    <div class="aviso">
-      <strong>Resumen:</strong>
-      🟢 ${completos} completos
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      🔴 ${incompletos} incompletos
-    </div>`;
-
-  html+=lista.map(function(item){
-    const d=item.d;
-    const e=item.estado;
-
-    return `
-      <div class="completo-fila ${e.completo ? "" : "incompleto"}">
-        <div class="completo-cabecera">
-          <div>
-            <strong style="font-size:16px;color:var(--azul3)">
-              ${esc(d.nombre)}
-            </strong>
-            <br>
-            <small>🪪 ${esc(d.cedula||"—")} · ${esc(d.id)}</small>
-          </div>
-
-          <span class="estado-expediente ${e.completo ? "estado-completo" : "estado-incompleto"}">
-            ${e.completo ? "🟢 ✓ COMPLETO" : "🔴 INCOMPLETO"}
-          </span>
-        </div>
-
-        ${
-          e.completo
-          ? `<div style="margin-top:8px;color:#14733f;font-weight:600">
-               ✓ No se detectan faltantes en los requisitos establecidos.
-             </div>`
-          : `<div class="faltantes">
-               <strong>Le falta:</strong><br>
-               ${e.faltantes.map(function(f){
-                 return `<span>❌ ${esc(f)}</span>`;
-               }).join("")}
-             </div>`
-        }
-      </div>`;
-  }).join("");
-
-  contenedor.innerHTML=html;
-}
-
-
-function mostrarReportesDocentes(){
-
-  if(!esAdmin()){
-    return;
-  }
-
-  const contenedor=document.getElementById("listaReportesDocentes");
-  if(!contenedor) return;
-
-  const buscar=String(document.getElementById("buscarReporteDocente")?.value||"")
-    .toLowerCase().trim();
-
-  const lista=DOCENTES.map(function(docente){
-    return obtenerDatosActuales(docente);
-  }).filter(function(d){
-    const texto=(String(d.nombre||"")+" "+String(d.cedula||"")+" "+String(d.centro||"")+" "+String(d.modalidad||"")+" "+String(d.especialidad||"")).toLowerCase();
-    return !buscar || texto.includes(buscar);
-  });
-
-  const seguro=function(v){
-    return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-  };
-
-  if(!lista.length){
-    contenedor.innerHTML='<div style="padding:25px;text-align:center;font-weight:bold;color:#666">No se encontraron docentes.</div>';
-    return;
-  }
-
-  contenedor.innerHTML=lista.map(function(d){
-    const id=seguro(d.id);
-    return `
-      <div class="reporte-docente">
-        <div class="reporte-info">
-          <strong>${seguro(d.nombre||"")}</strong>
-          <div><small>Cédula: ${seguro(d.cedula||"-")}</small></div>
-          <div><small>Centro: ${seguro(d.centro||"-")}</small></div>
-        </div>
-        <div class="reporte-acciones">
-          <button type="button" onclick="abrirPDFReporte('${id}')">📂 ABRIR</button>
-          <button type="button" onclick="descargarPDFReporte('${id}')">📄 DESCARGAR PDF</button>
-          <button type="button" onclick="imprimirPDFReporte('${id}')">🖨️ IMPRIMIR</button>
-        </div>
-      </div>`;
-  }).join("");
-}
-
-function prepararReporteDocente(id){
-  if(!esAdmin()){
-    alert("🔒 Esta función es exclusiva del administrador ELÍAS.");
-    return false;
-  }
-
-  const docente=DOCENTES.find(function(d){ return String(d.id)===String(id); });
-  if(!docente){
-    alert("❌ No se encontró el docente seleccionado.");
-    return false;
-  }
-
-  docenteActual=docente;
-  return true;
-}
-
-function abrirPDFReporte(id){
-  if(!prepararReporteDocente(id)) return;
-
-  try{
-    generarPDFExpediente("abrir");
-  }catch(error){
-    console.error(error);
-    alert("❌ No se pudo abrir el expediente: "+(error.message||error));
-  }
-}
-
-function descargarPDFReporte(id){
-  if(!prepararReporteDocente(id)) return;
-
-  try{
-    generarPDFExpediente("descargar");
-  }catch(error){
-    console.error(error);
-    alert("❌ No se pudo descargar el PDF: "+(error.message||error));
-  }
-}
-
-function imprimirPDFReporte(id){
-  if(!prepararReporteDocente(id)) return;
-
-  try{
-    generarPDFExpediente("imprimir");
-  }catch(error){
-    console.error(error);
-    alert("❌ No se pudo abrir la impresión: "+(error.message||error));
-  }
-}
-
-/* ENTER = INICIAR SESIÓN */
-["usuario","password"].forEach(function(id){
-  const campo=document.getElementById(id);
-  if(campo){
-    campo.addEventListener("keydown",function(e){
-      if(e.key==="Enter"){
-        e.preventDefault();
-        iniciarSesion();
-      }
-    });
-  }
-});
 
 </script>
 </body>
