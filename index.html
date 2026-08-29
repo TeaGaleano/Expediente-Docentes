@@ -1578,7 +1578,6 @@ let datos={
 let docenteActual=null;
 let tipoCamara=null;
 let streamCamara=null;
-let procesandoFoto=false;
 
 const MAX_FIRESTORE_FILE_BYTES=700*1024;
 
@@ -2412,6 +2411,31 @@ mostrarHistorial();
    USA DATOS ACTUALIZADOS
 ====================================================== */
 
+function deduplicarDocentesPorCedula(lista){
+
+  const mapa=new Map();
+
+  lista.forEach(function(d){
+    const clave=String(d.cedula||d.id||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    if(!clave){ mapa.set("__"+d.id,d); return; }
+
+    const anterior=mapa.get(clave);
+    if(!anterior){ mapa.set(clave,d); return; }
+
+    const campos=["nombre","telefono","inss","centro","modalidad","especialidad","combinacion","codigo","correo"];
+    const puntaje=function(x){
+      return campos.reduce(function(n,c){
+        return n+(String(x[c]??"").trim()!=="" ? 1 : 0);
+      },0);
+    };
+
+    if(puntaje(d)>puntaje(anterior)) mapa.set(clave,d);
+  });
+
+  return Array.from(mapa.values());
+}
+
+
 function mostrarDocentes(){
 
 const busqueda=
@@ -2450,14 +2474,15 @@ return texto.includes(busqueda);
 })
 .filter(function(d){
   return esAdmin() || !sesion.docenteId || d.id===sesion.docenteId;
-});
+ });
 
+const listaUnica=deduplicarDocentesPorCedula(lista);
 
 document
 .getElementById("tablaDocentes")
 .innerHTML=
 
-lista.map(function(d){
+listaUnica.map(function(d){
 
 return`
 
@@ -4001,24 +4026,11 @@ async function eliminarDocumento(tipo,indice){
 async function abrirCamara(tipo){
 
   tipoCamara=tipo;
-  procesandoFoto=false;
 
-  const modal=document.getElementById("modalCamara");
-  const video=document.getElementById("video");
-  const mensaje=document.getElementById("mensajeCamara");
-  const boton=document.querySelector("#modalCamara .camara-controles button");
-
-  // Cada vez que se abre una nueva sección, el botón vuelve a su estado normal.
-  if(boton){
-    boton.disabled=false;
-    boton.innerHTML="📸 TOMAR FOTO";
-  }
-
-  if(mensaje){
-    mensaje.textContent="⏳ Preparando cámara...";
-  }
-
-  modal.classList.add("activo");
+  document
+    .getElementById("modalCamara")
+    .classList
+    .add("activo");
 
   document
     .getElementById("tituloCamara")
@@ -4026,6 +4038,8 @@ async function abrirCamara(tipo){
       tipo==="rostro"
         ? "📷 Fotografía de rostro"
         : "📷 Fotografiar documento";
+
+  const video=document.getElementById("video");
 
   try{
 
@@ -4035,18 +4049,17 @@ async function abrirCamara(tipo){
     }
 
     /*
-     * 4:3 sin resizeMode forzado para evitar deformaciones.
-     * Resolución moderada para que la captura suba más rápido.
+     * 4:3 para documentos: reduce el efecto de estiramiento que
+     * algunos teléfonos muestran con una vista 16:9 forzada.
      */
     const constraints={
       audio:false,
       video:{
-        facingMode:tipo==="rostro"
-          ? {ideal:"user"}
-          : {ideal:"environment"},
-        width:{ideal:1280,min:640},
-        height:{ideal:960,min:480},
-        aspectRatio:{ideal:4/3}
+        facingMode:tipo==="rostro" ? {ideal:"user"} : {ideal:"environment"},
+        width:{ideal:1600,min:640},
+        height:{ideal:1200,min:480},
+        aspectRatio:{ideal:4/3},
+        resizeMode:{ideal:"crop-and-scale"}
       }
     };
 
@@ -4054,59 +4067,40 @@ async function abrirCamara(tipo){
       await navigator.mediaDevices.getUserMedia(constraints);
 
     video.srcObject=streamCamara;
+
     video.style.transform="none";
 
     try{
       await video.play();
     }catch(e){}
 
-    /*
-     * Esperamos a que el video tenga realmente sus dimensiones.
-     * Esto evita capturas de 0x0 en teléfonos.
-     */
-    if(!video.videoWidth || !video.videoHeight){
-      await new Promise(function(resolve){
-        const esperar=function(){
-          if(video.videoWidth && video.videoHeight){
-            video.removeEventListener("loadedmetadata",esperar);
-            resolve();
-          }
-        };
-        video.addEventListener("loadedmetadata",esperar);
-        setTimeout(function(){
-          video.removeEventListener("loadedmetadata",esperar);
-          resolve();
-        },2000);
-      });
-    }
-
     const pista=streamCamara.getVideoTracks()[0];
 
+    /*
+     * Si el navegador informa una resolución real, la usamos.
+     * No deformamos la imagen al tomarla.
+     */
     if(pista && pista.getSettings){
       const s=pista.getSettings();
       console.log("Cámara activa:",s.width,s.height,s.facingMode);
     }
 
-    if(mensaje){
-      mensaje.textContent=
+    document
+      .getElementById("mensajeCamara")
+      .textContent=
         tipo==="rostro"
-          ? "✅ Cámara lista. Centra el rostro y pulsa TOMAR FOTO."
-          : "✅ Cámara lista. Coloca el documento dentro de la guía y pulsa TOMAR FOTO.";
-    }
+          ? "Cámara frontal activa. Mantén el rostro centrado dentro de la guía."
+          : "Cámara trasera activa. Coloca el documento plano, centrado y sin inclinar.";
 
   }catch(error){
 
     console.error("Cámara:",error);
 
-    if(mensaje){
-      mensaje.textContent=
-        "❌ No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
-    }
+    document
+      .getElementById("mensajeCamara")
+      .textContent=
+        "No se pudo abrir la cámara. Permite el acceso o utiliza ARCHIVO.";
 
-    if(boton){
-      boton.disabled=false;
-      boton.innerHTML="📸 TOMAR FOTO";
-    }
   }
 }
 
@@ -4115,13 +4109,7 @@ async function abrirCamara(tipo){
    TOMAR FOTO
 ====================================================== */
 
-/* ======================================================
-   TOMAR FOTO
-====================================================== */
-
 async function tomarFoto(){
-
-  if(procesandoFoto) return;
 
   if(!streamCamara){
     alert("❌ La cámara no está activa.");
@@ -4138,12 +4126,11 @@ async function tomarFoto(){
 
   if(!w || !h){
     if(mensaje){
-      mensaje.textContent="⏳ La cámara todavía está enfocando. Intenta nuevamente.";
+      mensaje.textContent=
+        "⏳ La cámara todavía está iniciando. Espera un momento y vuelve a tomar la foto.";
     }
     return;
   }
-
-  procesandoFoto=true;
 
   try{
 
@@ -4156,9 +4143,6 @@ async function tomarFoto(){
       mensaje.textContent="📸 Capturando fotografía...";
     }
 
-    /*
-     * La captura conserva la proporción real del video.
-     */
     canvas.width=w;
     canvas.height=h;
 
@@ -4173,16 +4157,12 @@ async function tomarFoto(){
     ctx.imageSmoothingQuality="high";
     ctx.drawImage(video,0,0,w,h);
 
-    /*
-     * JPEG de calidad 0.70: suficientemente nítido para documentos
-     * y mucho más rápido de subir desde un teléfono.
-     */
     const blob=await new Promise(function(resolve,reject){
 
       canvas.toBlob(function(resultado){
         if(resultado) resolve(resultado);
         else reject(new Error("No se pudo generar la fotografía."));
-      },"image/jpeg",0.70);
+      },"image/jpeg",0.86);
 
     });
 
@@ -4196,9 +4176,13 @@ async function tomarFoto(){
     );
 
     if(mensaje){
-      mensaje.textContent="☁️ Subiendo fotografía...";
+      mensaje.textContent="☁️ Guardando fotografía...";
     }
 
+    /*
+     * La cámara permanece abierta hasta que Firebase confirma
+     * que el expediente fue guardado.
+     */
     const ok=await guardarArchivo(tipoCamara,archivo,true);
 
     if(ok){
@@ -4207,17 +4191,11 @@ async function tomarFoto(){
         mensaje.textContent="✅ ¡Fotografía guardada correctamente!";
       }
 
-      /*
-       * Cerramos solamente después de que guardarArchivo()
-       * confirme que terminó.
-       */
       setTimeout(function(){
         cerrarCamara();
-      },800);
+      },900);
 
     }else{
-
-      procesandoFoto=false;
 
       if(boton){
         boton.disabled=false;
@@ -4228,8 +4206,6 @@ async function tomarFoto(){
   }catch(error){
 
     console.error("Error al tomar fotografía:",error);
-
-    procesandoFoto=false;
 
     if(mensaje){
       mensaje.textContent=
@@ -4248,52 +4224,30 @@ async function tomarFoto(){
    CERRAR CAMARA
 ====================================================== */
 
-/* ======================================================
-   CERRAR CAMARA
-====================================================== */
-
 function cerrarCamara(){
 
-  procesandoFoto=false;
+if(streamCamara){
 
-  if(streamCamara){
+streamCamara
+.getTracks()
+.forEach(function(track){
 
-    streamCamara
-      .getTracks()
-      .forEach(function(track){
-        track.stop();
-      });
+track.stop();
 
-    streamCamara=null;
-  }
+});
 
-  const video=document.getElementById("video");
-  if(video){
-    video.pause();
-    video.srcObject=null;
-  }
+streamCamara=null;
 
-  const boton=document.querySelector("#modalCamara .camara-controles button");
-  if(boton){
-    boton.disabled=false;
-    boton.innerHTML="📸 TOMAR FOTO";
-  }
-
-  const mensaje=document.getElementById("mensajeCamara");
-  if(mensaje){
-    mensaje.textContent="Permite el acceso a la cámara cuando el navegador lo solicite.";
-  }
-
-  document
-    .getElementById("modalCamara")
-    .classList
-    .remove("activo");
 }
 
 
-/* ======================================================
-   TABS
-======================================================
+document
+.getElementById("modalCamara")
+.classList
+.remove("activo");
+
+}
+
 
 /* ======================================================
    TABS
