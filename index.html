@@ -1973,7 +1973,7 @@ combinacion:""
 },
 
 {
-id:"D033",
+id:"D034",
 nombre:"Maykel Josue Gutierrez Valle",
 cedula:"452-150504-1002T",
 telefono:"84495232",
@@ -1985,7 +1985,7 @@ combinacion:""
 },
 
 {
-id:"D034",
+id:"D033",
 nombre:"Darling Benicia Estrada Urbina",
 cedula:"246-180503-1000V",
 telefono:"7744-3232",
@@ -2229,7 +2229,7 @@ else{
         nombre:user.email||"USUARIO"
       };
 
-      // El perfil vincula el UID de Firebase con D001...D033.
+      // El perfil vincula el UID de Firebase con D001...D034.
       const perfilSnap=await db.collection("usuarios").doc(user.uid).get();
 
       if(!perfilSnap.exists){
