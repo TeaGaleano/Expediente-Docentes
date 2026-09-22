@@ -1579,6 +1579,11 @@ let docenteActual=null;
 let tipoCamara=null;
 let streamCamara=null;
 
+// Estado de acceso de cada docente según la colección "usuarios".
+// Si no existe un usuario vinculado, se mantiene ACTIVO para no alterar
+// los expedientes ya existentes.
+let estadoUsuariosPorDocente={};
+
 const MAX_FIRESTORE_FILE_BYTES=700*1024;
 
 
@@ -2064,6 +2069,10 @@ return{
 
 id:docente.id,
 
+activo:Object.prototype.hasOwnProperty.call(estadoUsuariosPorDocente,docente.id)
+  ? estadoUsuariosPorDocente[docente.id]
+  : true,
+
 nombre:c.cv_nombre||docente.nombre,
 
 cedula:c.cv_cedula||docente.cedula,
@@ -2520,8 +2529,10 @@ ${esc(d.especialidad||"—")}
 
 <td>
 
-<span class="badge">
-ACTIVO
+<span class="badge" style="${d.activo===false
+  ? "background:#ffe7e7;color:#a51d1d;"
+  : "background:#e8f7ef;color:#14733f;"}">
+${d.activo===false ? "INACTIVO" : "ACTIVO"}
 </span>
 
 </td>
@@ -4450,7 +4461,10 @@ document.getElementById("totalDocentes").textContent=
   esAdmin() ? DOCENTES.length : listaEstadisticas.length;
 
 document.getElementById("totalActivos").textContent=
-  listaEstadisticas.length;
+  listaEstadisticas.filter(function(docente){
+    const actual=obtenerDatosActuales(docente);
+    return actual.activo!==false;
+  }).length;
 
 document.getElementById("totalCV").textContent=cv;
 
@@ -4656,6 +4670,17 @@ async function cargarDatosFirebase(){
 
     snap.forEach(function(doc){
       datos[doc.id]=doc.data()||{};
+    });
+
+    // Leer el estado de acceso de cada docente.
+    // Esto NO borra ni modifica ningún expediente.
+    estadoUsuariosPorDocente={};
+    const usuariosSnap=await db.collection("usuarios").get();
+    usuariosSnap.forEach(function(doc){
+      const u=doc.data()||{};
+      if(u.docenteId){
+        estadoUsuariosPorDocente[u.docenteId]=(u.Activo!==false && u.activo!==false);
+      }
     });
 
   }else{
