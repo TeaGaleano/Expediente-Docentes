@@ -5079,8 +5079,11 @@ function generarPDFExpediente(modo="imprimir"){
     return;
   }
 
-  const exp=obtenerExpediente(docenteActual);
-  const d=obtenerDatosActuales(docenteActual);
+  // Alias local estable del docente seleccionado.
+  // Evita errores "docente is not defined" en cualquier bloque del generador PDF.
+  const docente=docenteActual;
+  const exp=obtenerExpediente(docente);
+  const d=obtenerDatosActuales(docente);
   const documentos=exp.documentos||{};
 
   const escapeHTML=function(valor){
@@ -6353,50 +6356,8 @@ ${paginasDocumentos}
 `;
 
   /* =====================================================
-     CACHE + PROGRESO DE GENERACIÓN PDF
-     - No modifica Firebase ni los expedientes.
-     - Reutiliza el PDF mientras el contenido no haya cambiado.
+     PREPARAR PDF RASTERIZADO A4
      ===================================================== */
-  window.__cachePDFExpedientes = window.__cachePDFExpedientes || new Map();
-
-  const huellaPDF=function(texto){
-    let h=2166136261;
-    for(let i=0;i<texto.length;i++){
-      h ^= texto.charCodeAt(i);
-      h = Math.imul(h,16777619);
-    }
-    return (h>>>0).toString(16)+"-"+texto.length;
-  };
-
-  const claveCachePDF=(docente.id||docente.cedula||docente.nombre||"expediente")+"-"+huellaPDF(contenido);
-
-  const mostrarProgresoPDF=function(porcentaje,texto){
-    let capa=document.getElementById("progresoGeneracionPDF");
-    if(!capa){
-      capa=document.createElement("div");
-      capa.id="progresoGeneracionPDF";
-      capa.style.cssText="position:fixed;inset:0;background:rgba(8,25,48,.68);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px";
-      capa.innerHTML='<div style="width:420px;max-width:94vw;background:#fff;border-radius:18px;padding:26px;box-shadow:0 18px 55px rgba(0,0,0,.3);text-align:center;font-family:Segoe UI,Arial,sans-serif"><div style="font-size:22px;font-weight:800;color:#123f78;margin-bottom:8px">📄 Preparando expediente</div><div id="textoProgresoPDF" style="color:#60758c;margin-bottom:16px;font-weight:600">Preparando...</div><div style="height:14px;background:#e7edf4;border-radius:20px;overflow:hidden"><div id="barraProgresoPDF" style="height:100%;width:0%;background:#1677ff;transition:width .18s ease"></div></div><div id="numeroProgresoPDF" style="font-size:22px;font-weight:800;color:#123f78;margin-top:10px">0%</div></div>';
-      document.body.appendChild(capa);
-    }
-    const p=Math.max(0,Math.min(100,Math.round(porcentaje||0)));
-    capa.style.display="flex";
-    document.getElementById("barraProgresoPDF").style.width=p+"%";
-    document.getElementById("numeroProgresoPDF").textContent=p+"%";
-    document.getElementById("textoProgresoPDF").textContent=texto||"Procesando...";
-  };
-
-  const cerrarProgresoPDF=function(){
-    const capa=document.getElementById("progresoGeneracionPDF");
-    if(capa) capa.style.display="none";
-  };
-
-  const abrirBlobPDF=function(blob,ventana){
-    const url=URL.createObjectURL(blob);
-    if(ventana) ventana.location.replace(url);
-    setTimeout(function(){ try{ if(ventana) ventana.focus(); }catch(e){} },500);
-    setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} },120000);
-  };
 
   const generarPDFComoImagen=function(abrirDespues,imprimirDespues){
 
@@ -6418,30 +6379,6 @@ ${paginasDocumentos}
       alert("⚠️ Chrome bloqueó la ventana. Permite las ventanas emergentes para este sitio.");
       return;
     }
-
-    if(ventana){
-      try{
-        ventana.document.open();
-        ventana.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Preparando expediente</title></head><body style="margin:0;background:#eef4fb;font-family:Segoe UI,Arial,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center"><div style="background:#fff;padding:32px;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.16);text-align:center;max-width:430px"><div style="font-size:44px">📄</div><h2 style="color:#123f78;margin:8px 0">Preparando expediente</h2><p id="estadoVentanaPDF" style="color:#60758c">Cargando páginas y documentos...</p></div></body></html>');
-        ventana.document.close();
-      }catch(e){}
-    }
-
-    const cache=window.__cachePDFExpedientes.get(claveCachePDF);
-    if(cache && cache.blob){
-      mostrarProgresoPDF(100,"PDF listo desde caché");
-      if(abrirDespues || imprimirDespues){
-        abrirBlobPDF(cache.blob,ventana);
-      }else{
-        const url=URL.createObjectURL(cache.blob);
-        const a=document.createElement("a"); a.href=url; a.download=nombreArchivo; a.click();
-        setTimeout(function(){ URL.revokeObjectURL(url); },30000);
-      }
-      setTimeout(cerrarProgresoPDF,350);
-      return;
-    }
-
-    mostrarProgresoPDF(3,"Cargando imágenes y documentos...");
 
     const marco=document.createElement("iframe");
     marco.style.position="fixed";
@@ -6502,7 +6439,6 @@ ${paginasDocumentos}
     esperarRecursos()
       .then(function(){
 
-        mostrarProgresoPDF(10,"Documentos cargados. Preparando páginas...");
         normalizarFotos();
 
         return new Promise(function(resolve){
@@ -6530,9 +6466,6 @@ ${paginasDocumentos}
         paginas.forEach(function(pagina,index){
 
           trabajos=trabajos.then(function(){
-            const porcentaje=12+Math.round((index/Math.max(1,paginas.length))*78);
-            mostrarProgresoPDF(porcentaje,"Procesando página "+(index+1)+" de "+paginas.length+"...");
-            if(ventana){ try{ const e=ventana.document.getElementById("estadoVentanaPDF"); if(e) e.textContent="Procesando página "+(index+1)+" de "+paginas.length+"..."; }catch(err){} }
 
             /*
              * Respeta la orientación ORIGINAL de cada fotografía de documento.
@@ -6595,40 +6528,51 @@ ${paginasDocumentos}
         });
 
         return trabajos.then(function(){
-          mostrarProgresoPDF(94,"Finalizando PDF...");
-          const blob=pdf.output("blob");
-          window.__cachePDFExpedientes.set(claveCachePDF,{blob:blob,creado:Date.now()});
 
-          // Evita que la caché crezca indefinidamente.
-          if(window.__cachePDFExpedientes.size>8){
-            const primeraClave=window.__cachePDFExpedientes.keys().next().value;
-            window.__cachePDFExpedientes.delete(primeraClave);
-          }
+          if(abrirDespues){
 
-          mostrarProgresoPDF(100,"✅ Expediente listo");
+            const blob=pdf.output("blob");
+            const url=URL.createObjectURL(blob);
 
-          if(abrirDespues || imprimirDespues){
-            abrirBlobPDF(blob,ventana);
-            setTimeout(cerrarProgresoPDF,450);
+            ventana.location.href=url;
+
+            setTimeout(function(){
+              try{
+                ventana.focus();
+              }catch(e){}
+            },800);
+
             return;
           }
 
-          const url=URL.createObjectURL(blob);
-          const a=document.createElement("a");
-          a.href=url;
-          a.download=nombreArchivo;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(function(){ URL.revokeObjectURL(url); },30000);
-          setTimeout(cerrarProgresoPDF,450);
+          if(imprimirDespues){
+
+            const blob=pdf.output("blob");
+            const url=URL.createObjectURL(blob);
+
+            ventana.location.href=url;
+
+            /*
+             * El visor PDF de Chrome controla la impresión.
+             * Dejamos el PDF abierto exactamente como se generó,
+             * sin volver a maquetarlo con HTML.
+             */
+            setTimeout(function(){
+              try{
+                ventana.focus();
+              }catch(e){}
+            },1000);
+
+            return;
+          }
+
+          pdf.save(nombreArchivo);
 
         });
 
       })
       .catch(function(error){
 
-        cerrarProgresoPDF();
         console.error("PDF:",error);
 
         if(ventana){
