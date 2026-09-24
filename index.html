@@ -3858,7 +3858,7 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
   const informar=function(txt,porcentaje){
     if(desdeCamara && mensajeCamara) mensajeCamara.textContent=txt;
     if(typeof porcentaje==="number") porcentajeVisual=porcentaje;
-    mostrarProgresoSistema("Cargando archivo",porcentajeVisual,txt);
+    mostrarProgresoSistema("Subiendo archivo",porcentajeVisual,txt);
   };
 
   try{
@@ -6464,19 +6464,49 @@ ${paginasDocumentos}
             }
 
             /*
-             * 794 × 1123 px = hoja A4 aproximada a 96 DPI.
-             * Todo se rasteriza dentro de una sola hoja.
+             * Conserva la orientación real del documento:
+             * - fotografía vertical  -> página A4 vertical
+             * - fotografía horizontal -> página A4 horizontal
+             * La portada, hoja de vida y cédula mantienen su diseño vertical.
              */
-            pagina.style.width="794px";
-            pagina.style.height="1123px";
-            pagina.style.minHeight="1123px";
-            pagina.style.maxHeight="1123px";
+            let esHorizontal=false;
+            const imagenDocumento=pagina.classList.contains("pagina-documento-completo")
+              ? pagina.querySelector("img.foto-hoja")
+              : null;
+
+            if(imagenDocumento){
+              if(!imagenDocumento.complete || !imagenDocumento.naturalWidth){
+                await new Promise(function(resolve){
+                  const terminar=function(){ resolve(); };
+                  imagenDocumento.addEventListener("load",terminar,{once:true});
+                  imagenDocumento.addEventListener("error",terminar,{once:true});
+                  setTimeout(terminar,5000);
+                });
+              }
+              esHorizontal=
+                imagenDocumento.naturalWidth>0 &&
+                imagenDocumento.naturalHeight>0 &&
+                imagenDocumento.naturalWidth>imagenDocumento.naturalHeight;
+            }
+
+            const anchoPx=esHorizontal ? 1123 : 794;
+            const altoPx=esHorizontal ? 794 : 1123;
+            const anchoMM=esHorizontal ? 297 : 210;
+            const altoMM=esHorizontal ? 210 : 297;
+            const orientacion=esHorizontal ? "landscape" : "portrait";
+
+            pagina.style.width=anchoPx+"px";
+            pagina.style.height=altoPx+"px";
+            pagina.style.minHeight=altoPx+"px";
+            pagina.style.maxHeight=altoPx+"px";
             pagina.style.margin="0";
+
             if(pagina.classList.contains("pagina-documento-completo")){
               pagina.style.padding="0";
             }else{
               pagina.style.padding="60px 64px 72px 64px";
             }
+
             pagina.style.boxSizing="border-box";
             pagina.style.overflow="hidden";
             pagina.style.background="#ffffff";
@@ -6487,16 +6517,16 @@ ${paginasDocumentos}
               allowTaint:true,
               backgroundColor:"#ffffff",
               logging:false,
-              width:794,
-              height:1123,
-              windowWidth:794,
-              windowHeight:1123,
+              width:anchoPx,
+              height:altoPx,
+              windowWidth:anchoPx,
+              windowHeight:altoPx,
               scrollX:0,
               scrollY:0
             }).then(function(canvas){
 
               if(index>0){
-                pdf.addPage("a4","portrait");
+                pdf.addPage("a4",orientacion);
               }
 
               const imagen=canvas.toDataURL("image/png");
@@ -6506,8 +6536,8 @@ ${paginasDocumentos}
                 "PNG",
                 0,
                 0,
-                210,
-                297,
+                anchoMM,
+                altoMM,
                 undefined,
                 "SLOW"
               );
