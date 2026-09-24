@@ -3757,6 +3757,46 @@ ELIMINAR
 }
 
 
+
+/* ======================================================
+   INDICADOR DE PROGRESO
+   Se crea dinámicamente para no alterar expedientes ni datos.
+====================================================== */
+function mostrarProgresoSistema(titulo,porcentaje,texto){
+  let capa=document.getElementById("progresoSistema");
+  if(!capa){
+    capa=document.createElement("div");
+    capa.id="progresoSistema";
+    capa.style.cssText="position:fixed;inset:0;background:rgba(10,25,45,.68);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;";
+    capa.innerHTML=`
+      <div style="width:390px;max-width:95%;background:#fff;border-radius:18px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center">
+        <div id="progresoTitulo" style="font-size:20px;font-weight:800;color:#123c78;margin-bottom:14px"></div>
+        <div style="width:118px;height:118px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:conic-gradient(#0878ff 0%,#e8eef5 0)">
+          <div style="width:91px;height:91px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">
+            <strong id="progresoNumero" style="font-size:25px;color:#123c78">0%</strong>
+          </div>
+        </div>
+        <div style="height:12px;background:#e8eef5;border-radius:20px;overflow:hidden">
+          <div id="progresoBarra" style="height:100%;width:0%;background:#0878ff;transition:width .2s"></div>
+        </div>
+        <div id="progresoTexto" style="margin-top:12px;color:#6b7b8d;font-weight:600">Preparando...</div>
+      </div>`;
+    document.body.appendChild(capa);
+  }
+  const p=Math.max(0,Math.min(100,Math.round(Number(porcentaje)||0)));
+  capa.style.display="flex";
+  document.getElementById("progresoTitulo").textContent=titulo||"Procesando";
+  document.getElementById("progresoNumero").textContent=p+"%";
+  document.getElementById("progresoBarra").style.width=p+"%";
+  const circulo=capa.querySelector("div > div:nth-child(2)");
+  if(circulo) circulo.style.background=`conic-gradient(#0878ff ${p}%,#e8eef5 ${p}%)`;
+  document.getElementById("progresoTexto").textContent=texto||"";
+}
+function cerrarProgresoSistema(){
+  const capa=document.getElementById("progresoSistema");
+  if(capa) capa.style.display="none";
+}
+
 /* ======================================================
    ARCHIVOS
 ====================================================== */
@@ -3814,13 +3854,16 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
   const exp=obtenerExpediente(docenteActual);
   const mensajeCamara=document.getElementById("mensajeCamara");
 
-  const informar=function(txt){
+  let porcentajeVisual=5;
+  const informar=function(txt,porcentaje){
     if(desdeCamara && mensajeCamara) mensajeCamara.textContent=txt;
+    if(typeof porcentaje==="number") porcentajeVisual=porcentaje;
+    mostrarProgresoSistema("Cargando archivo",porcentajeVisual,txt);
   };
 
   try{
 
-    informar("🖼️ Preparando fotografía...");
+    informar("🖼️ Preparando archivo...",5);
 
     let archivoFinal=archivo;
 
@@ -3839,7 +3882,7 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
 
       try{
 
-        informar("☁️ Subiendo fotografía a Firebase...");
+        informar("☁️ Subiendo archivo a Firebase...",10);
 
         const nombreSeguro=(archivoFinal.name||("foto_"+Date.now()+".jpg"))
           .replace(/[^a-zA-Z0-9._-]/g,"_");
@@ -3870,7 +3913,7 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
                 const porcentaje=Math.round(
                   snapshot.bytesTransferred/snapshot.totalBytes*100
                 );
-                informar("☁️ Subiendo fotografía... "+porcentaje+"%");
+                informar("☁️ Subiendo archivo... "+porcentaje+"%",porcentaje);
               }
             },
             function(error){
@@ -3924,7 +3967,7 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
       }catch(e){
 
         console.warn("Storage no pudo guardar la foto:",e);
-        informar("☁️ Guardando copia comprimida en Firebase...");
+        informar("☁️ Preparando copia segura en Firebase...",35);
       }
     }
 
@@ -3937,7 +3980,7 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
 
       let copia=archivoFinal;
 
-      informar("☁️ Comprimiendo fotografía...");
+      informar("☁️ Optimizando archivo...",45);
 
       if(copia.type && copia.type.startsWith("image/")){
         copia=await comprimirImagen(copia,850,0.48);
@@ -3951,7 +3994,7 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
         throw new Error("FOTO_DEMASIADO_GRANDE");
       }
 
-      informar("☁️ Guardando fotografía en Firebase...");
+      informar("☁️ Guardando archivo en Firebase...",70);
 
       const data=await archivoADataURL(copia);
 
@@ -3985,7 +4028,7 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
       }
     }
 
-    informar("☁️ Confirmando guardado...");
+    informar("☁️ Confirmando guardado...",92);
 
     await guardarDatos();
 
@@ -4001,12 +4044,14 @@ async function guardarArchivo(tipo,archivo,desdeCamara=false){
       }
     }
 
-    informar("✅ ¡Fotografía guardada correctamente!");
+    informar("✅ ¡Archivo guardado correctamente!",100);
+    setTimeout(cerrarProgresoSistema,650);
 
     return true;
 
   }catch(error){
 
+    cerrarProgresoSistema();
     console.error("Error guardando fotografía:",error);
 
     let mensaje="❌ No se pudo guardar la fotografía.";
@@ -6313,6 +6358,15 @@ ${paginasDocumentos}
       return;
     }
 
+    mostrarProgresoSistema("Generando expediente PDF",2,"Preparando páginas y documentos...");
+    if(ventana){
+      try{
+        ventana.document.open();
+        ventana.document.write('<!doctype html><html><head><title>Generando expediente...</title></head><body style="font-family:Segoe UI,Arial;background:#eef4fb;margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center"><div style="background:white;padding:35px;border-radius:18px;box-shadow:0 8px 35px rgba(0,0,0,.15);text-align:center;max-width:430px"><h2 style="color:#123c78">📄 Generando expediente</h2><p id="estadoPDF">Preparando documentos...</p><p style="color:#6b7b8d">Esta ventana se actualizará automáticamente cuando el PDF esté listo.</p></div></body></html>');
+        ventana.document.close();
+      }catch(e){}
+    }
+
     const marco=document.createElement("iframe");
     marco.style.position="fixed";
     marco.style.left="-20000px";
@@ -6399,6 +6453,15 @@ ${paginasDocumentos}
         paginas.forEach(function(pagina,index){
 
           trabajos=trabajos.then(function(){
+            const porcentajePDF=Math.max(5,Math.round((index/paginas.length)*88));
+            mostrarProgresoSistema("Generando expediente PDF",porcentajePDF,
+              "Procesando página "+(index+1)+" de "+paginas.length+"...");
+            if(ventana){
+              try{
+                const estado=ventana.document.getElementById("estadoPDF");
+                if(estado) estado.textContent="Procesando página "+(index+1)+" de "+paginas.length+"...";
+              }catch(e){}
+            }
 
             /*
              * 794 × 1123 px = hoja A4 aproximada a 96 DPI.
@@ -6409,13 +6472,17 @@ ${paginasDocumentos}
             pagina.style.minHeight="1123px";
             pagina.style.maxHeight="1123px";
             pagina.style.margin="0";
-            pagina.style.padding="60px 64px 72px 64px";
+            if(pagina.classList.contains("pagina-documento-completo")){
+              pagina.style.padding="0";
+            }else{
+              pagina.style.padding="60px 64px 72px 64px";
+            }
             pagina.style.boxSizing="border-box";
             pagina.style.overflow="hidden";
             pagina.style.background="#ffffff";
 
             return html2canvas(pagina,{
-              scale:3,
+              scale:2,
               useCORS:true,
               allowTaint:true,
               backgroundColor:"#ffffff",
@@ -6455,13 +6522,14 @@ ${paginasDocumentos}
             const blob=pdf.output("blob");
             const url=URL.createObjectURL(blob);
 
-            ventana.location.href=url;
+            mostrarProgresoSistema("Generando expediente PDF",100,"✅ PDF listo. Abriendo...");
+            ventana.location.replace(url);
 
             setTimeout(function(){
-              try{
-                ventana.focus();
-              }catch(e){}
+              cerrarProgresoSistema();
+              try{ ventana.focus(); }catch(e){}
             },800);
+            setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} },120000);
 
             return;
           }
@@ -6471,7 +6539,8 @@ ${paginasDocumentos}
             const blob=pdf.output("blob");
             const url=URL.createObjectURL(blob);
 
-            ventana.location.href=url;
+            mostrarProgresoSistema("Generando expediente PDF",100,"✅ PDF listo. Abriendo impresión...");
+            ventana.location.replace(url);
 
             /*
              * El visor PDF de Chrome controla la impresión.
@@ -6479,15 +6548,17 @@ ${paginasDocumentos}
              * sin volver a maquetarlo con HTML.
              */
             setTimeout(function(){
-              try{
-                ventana.focus();
-              }catch(e){}
+              cerrarProgresoSistema();
+              try{ ventana.focus(); }catch(e){}
             },1000);
+            setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} },120000);
 
             return;
           }
 
+          mostrarProgresoSistema("Generando expediente PDF",100,"✅ Descarga lista.");
           pdf.save(nombreArchivo);
+          setTimeout(cerrarProgresoSistema,700);
 
         });
 
