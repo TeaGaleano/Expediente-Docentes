@@ -1566,6 +1566,16 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 const auth=firebase.auth();
 
+// Caché local de Firestore: después de la primera carga, el navegador puede
+// reutilizar datos ya consultados y reducir esperas al volver a abrir el sistema.
+try{
+  db.enablePersistence({synchronizeTabs:true}).catch(function(error){
+    console.warn("Caché local de Firestore no disponible:",error.code||error);
+  });
+}catch(e){
+  console.warn("No se pudo activar caché local:",e);
+}
+
 let storage=null;
 try{
   storage=firebase.storage();
@@ -1597,6 +1607,11 @@ let streamCamara=null;
 // Si no existe un usuario vinculado, se mantiene ACTIVO para no alterar
 // los expedientes ya existentes.
 let estadoUsuariosPorDocente={};
+
+// Controla qué expedientes ya fueron leídos realmente desde Firebase.
+// Evita confundir una estructura local vacía con un expediente todavía no cargado.
+let expedientesCargados=new Set();
+let expedientesCargando=new Map();
 
 const MAX_FIRESTORE_FILE_BYTES=700*1024;
 
@@ -2592,7 +2607,7 @@ No se encontraron docentes.
    ABRIR EXPEDIENTE
 ====================================================== */
 
-function abrirExpediente(id){
+async function abrirExpediente(id){
 
   if(!esAdmin() && sesion.docenteId!==id){
     alert("❌ No tienes permiso para abrir este expediente.");
@@ -2603,6 +2618,44 @@ function abrirExpediente(id){
   if(!docenteActual) return;
 
   document.getElementById("modalExpediente").classList.add("activo");
+
+  // Si este expediente todavía no terminó de llegar desde Firebase,
+  // lo pedimos directamente. Así no hay que esperar a que carguen los 34.
+  if(!expedientesCargados.has(id)){
+    const perfil=document.getElementById("perfilExpediente");
+    const titulo=document.getElementById("tituloExpediente");
+    const subtitulo=document.getElementById("subtituloExpediente");
+    if(titulo) titulo.textContent="📂 "+docenteActual.nombre;
+    if(subtitulo) subtitulo.textContent="☁️ Cargando expediente desde Firebase...";
+    if(perfil) perfil.innerHTML='<div class="aviso" style="width:100%;text-align:center"><strong>⏳ Cargando datos, foto y documentos...</strong><br><br>No cierres esta ventana.</div>';
+
+    try{
+      let promesa=expedientesCargando.get(id);
+      if(!promesa){
+        promesa=db.collection("expedientes").doc(id).get();
+        expedientesCargando.set(id,promesa);
+      }
+      const snap=await promesa;
+      expedientesCargando.delete(id);
+
+      if(snap.exists){
+        datos[id]=snap.data()||{};
+      }else if(!datos[id]){
+        datos[id]={campos:{},documentos:{},foto:"",actualizado:""};
+      }
+      expedientesCargados.add(id);
+    }catch(error){
+      expedientesCargando.delete(id);
+      console.error("Error cargando expediente individual:",error);
+      if(subtitulo) subtitulo.textContent="❌ No se pudo cargar el expediente. Revisa Internet e intenta nuevamente.";
+      return;
+    }
+  }
+
+  // El usuario pudo cerrar el modal mientras esperaba la red.
+  if(!document.getElementById("modalExpediente").classList.contains("activo")) return;
+  if(!docenteActual || docenteActual.id!==id) return;
+
   renderizarExpediente();
 }
 
@@ -4842,6 +4895,7 @@ async function cargarDatosFirebase(){
 
     snap.forEach(function(doc){
       datos[doc.id]=doc.data()||{};
+      expedientesCargados.add(doc.id);
     });
 
     // Leer el estado de acceso de cada docente.
@@ -4868,6 +4922,7 @@ async function cargarDatosFirebase(){
 
     if(snap.exists){
       datos[sesion.docenteId]=snap.data()||{};
+      expedientesCargados.add(sesion.docenteId);
     }else{
       // Si todavía no existe, se crea una estructura local vacía.
       // Se guardará cuando el docente haga su primer cambio.
