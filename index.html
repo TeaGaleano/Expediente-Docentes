@@ -3757,7 +3757,39 @@ ELIMINAR
 }
 
 
-/* ======================================================\n   PROGRESO DE SUBIDA DE ARCHIVOS\n   Solo visual: no modifica los datos del expediente.\n====================================================== */\nfunction mostrarProgresoSubida(porcentaje,texto){\n  let capa=document.getElementById("progresoSubidaArchivo");\n  if(!capa){\n    capa=document.createElement("div");\n    capa.id="progresoSubidaArchivo";\n    capa.style.cssText="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:20px";\n    capa.innerHTML=`<div style="width:390px;max-width:95%;background:#fff;border-radius:18px;padding:25px;text-align:center;box-shadow:0 18px 55px rgba(0,0,0,.3)">\n      <div style="font-size:21px;font-weight:800;color:#123c78;margin-bottom:15px">📎 Subiendo archivo</div>\n      <div style="width:112px;height:112px;border-radius:50%;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;background:conic-gradient(#0878ff 0%,#e7edf5 0%)" id="circuloProgresoSubida">\n        <div style="width:86px;height:86px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><strong id="numeroProgresoSubida" style="font-size:25px;color:#123c78">0%</strong></div>\n      </div>\n      <div style="height:12px;background:#e7edf5;border-radius:20px;overflow:hidden"><div id="barraProgresoSubida" style="height:100%;width:0;background:#0878ff;transition:width .18s"></div></div>\n      <div id="textoProgresoSubida" style="margin-top:12px;color:#60758b;font-weight:600">Preparando archivo...</div>\n    </div>`;\n    document.body.appendChild(capa);\n  }\n  const p=Math.max(0,Math.min(100,Math.round(Number(porcentaje)||0)));\n  capa.style.display="flex";\n  document.getElementById("numeroProgresoSubida").textContent=p+"%";\n  document.getElementById("barraProgresoSubida").style.width=p+"%";\n  document.getElementById("circuloProgresoSubida").style.background=`conic-gradient(#0878ff ${p}%,#e7edf5 ${p}%)`;\n  document.getElementById("textoProgresoSubida").textContent=texto||"Subiendo...";\n}\nfunction cerrarProgresoSubida(){\n  const capa=document.getElementById("progresoSubidaArchivo");\n  if(capa) capa.style.display="none";\n}\n\n/* ======================================================
+/* ======================================================
+   PROGRESO DE SUBIDA DE ARCHIVOS
+   Solo visual: no modifica los datos del expediente.
+====================================================== */
+function mostrarProgresoSubida(porcentaje,texto){
+  let capa=document.getElementById("progresoSubidaArchivo");
+  if(!capa){
+    capa=document.createElement("div");
+    capa.id="progresoSubidaArchivo";
+    capa.style.cssText="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:20px";
+    capa.innerHTML=`<div style="width:390px;max-width:95%;background:#fff;border-radius:18px;padding:25px;text-align:center;box-shadow:0 18px 55px rgba(0,0,0,.3)">
+      <div style="font-size:21px;font-weight:800;color:#123c78;margin-bottom:15px">📎 Subiendo archivo</div>
+      <div style="width:112px;height:112px;border-radius:50%;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;background:conic-gradient(#0878ff 0%,#e7edf5 0%)" id="circuloProgresoSubida">
+        <div style="width:86px;height:86px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><strong id="numeroProgresoSubida" style="font-size:25px;color:#123c78">0%</strong></div>
+      </div>
+      <div style="height:12px;background:#e7edf5;border-radius:20px;overflow:hidden"><div id="barraProgresoSubida" style="height:100%;width:0;background:#0878ff;transition:width .18s"></div></div>
+      <div id="textoProgresoSubida" style="margin-top:12px;color:#60758b;font-weight:600">Preparando archivo...</div>
+    </div>`;
+    document.body.appendChild(capa);
+  }
+  const p=Math.max(0,Math.min(100,Math.round(Number(porcentaje)||0)));
+  capa.style.display="flex";
+  document.getElementById("numeroProgresoSubida").textContent=p+"%";
+  document.getElementById("barraProgresoSubida").style.width=p+"%";
+  document.getElementById("circuloProgresoSubida").style.background=`conic-gradient(#0878ff ${p}%,#e7edf5 ${p}%)`;
+  document.getElementById("textoProgresoSubida").textContent=texto||"Subiendo...";
+}
+function cerrarProgresoSubida(){
+  const capa=document.getElementById("progresoSubidaArchivo");
+  if(capa) capa.style.display="none";
+}
+
+/* ======================================================
    ARCHIVOS
 ====================================================== */
 
