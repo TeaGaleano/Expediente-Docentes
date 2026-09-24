@@ -5926,15 +5926,19 @@ h3{
 
 /* ===== UNA HOJA POR FOTO / DOCUMENTO ===== */
 .pagina-documento-completo{
-  padding:12mm 12mm 17mm 12mm;
+  padding:0 !important;
 }
-.encabezado-documento{margin-bottom:7mm;}
+.pagina-documento-completo .encabezado-documento,
+.pagina-documento-completo .pie{
+  display:none !important;
+}
+.encabezado-documento{margin-bottom:0;}
 .foto-hoja-completa{
   position:absolute;
-  left:8mm;
-  right:8mm;
-  top:30mm;
-  bottom:13mm;
+  left:3mm;
+  right:3mm;
+  top:3mm;
+  bottom:3mm;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -5942,11 +5946,12 @@ h3{
 }
 .foto-hoja{
   display:block;
-  width:auto;
-  height:auto;
+  width:100%;
+  height:100%;
   max-width:100%;
   max-height:100%;
   object-fit:contain;
+  image-rendering:auto;
 }
 .pagina-record-completo .encabezado{display:none;}
 .pagina-record-completo .foto-hoja-completa{
@@ -6009,18 +6014,27 @@ h3{
     page-break-after:auto;
   }
 
+  .pagina-documento-completo{
+    padding:0 !important;
+  }
+
+  .pagina-documento-completo .encabezado-documento,
+  .pagina-documento-completo .pie{
+    display:none !important;
+  }
+
   .pagina-documento-completo .foto-hoja-completa{
-    left:8mm;
-    right:8mm;
-    top:12mm;
-    bottom:10mm;
+    left:3mm;
+    right:3mm;
+    top:3mm;
+    bottom:3mm;
   }
 
   .pagina-documento-completo .foto-hoja{
+    width:100%;
+    height:100%;
     max-width:100%;
     max-height:100%;
-    width:auto;
-    height:auto;
     object-fit:contain;
   }
 
@@ -6401,7 +6415,7 @@ ${paginasDocumentos}
             pagina.style.background="#ffffff";
 
             return html2canvas(pagina,{
-              scale:2,
+              scale:3,
               useCORS:true,
               allowTaint:true,
               backgroundColor:"#ffffff",
@@ -6418,17 +6432,17 @@ ${paginasDocumentos}
                 pdf.addPage("a4","portrait");
               }
 
-              const imagen=canvas.toDataURL("image/jpeg",0.97);
+              const imagen=canvas.toDataURL("image/png");
 
               pdf.addImage(
                 imagen,
-                "JPEG",
+                "PNG",
                 0,
                 0,
                 210,
                 297,
                 undefined,
-                "FAST"
+                "SLOW"
               );
             });
           });
