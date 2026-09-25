@@ -6493,8 +6493,95 @@ ${paginasDocumentos}
             pagina.style.overflow="hidden";
             pagina.style.background="#ffffff";
 
+            /*
+             * CALIDAD DE IMPRESIÓN:
+             * Las páginas que contienen un documento escaneado/fotografiado
+             * se insertan DIRECTAMENTE en el PDF desde la imagen original.
+             * Así evitamos volver a fotografiar la imagen con html2canvas,
+             * que era lo que hacía borrosas las letras pequeñas al imprimir.
+             */
+            if(imgDocumento && imgDocumento.naturalWidth>0 && imgDocumento.naturalHeight>0){
+
+              if(index>0){
+                pdf.addPage("a4",orientacion);
+              }
+
+              const margen=10;
+              const altoEncabezado=20;
+              const altoPie=9;
+              const areaX=margen;
+              const areaY=altoEncabezado;
+              const areaW=anchoMM-(margen*2);
+              const areaH=altoMM-altoEncabezado-altoPie;
+
+              const proporcion=imgDocumento.naturalWidth/imgDocumento.naturalHeight;
+              let imgW=areaW;
+              let imgH=imgW/proporcion;
+
+              if(imgH>areaH){
+                imgH=areaH;
+                imgW=imgH*proporcion;
+              }
+
+              const imgX=areaX+(areaW-imgW)/2;
+              const imgY=areaY+(areaH-imgH)/2;
+
+              const tituloPagina=(pagina.querySelector(".encabezado-documento h1")||{}).textContent||"DOCUMENTO";
+              const nombrePagina=(pagina.querySelector(".encabezado-documento p")||{}).textContent||"";
+
+              pdf.setTextColor(21,87,166);
+              pdf.setFont("helvetica","bold");
+              pdf.setFontSize(13);
+              pdf.text(String(tituloPagina).trim(),margen,9);
+              pdf.setTextColor(104,119,138);
+              pdf.setFont("helvetica","normal");
+              pdf.setFontSize(8);
+              pdf.text(String(nombrePagina).trim(),margen,14);
+              pdf.setDrawColor(21,87,166);
+              pdf.line(margen,16,anchoMM-margen,16);
+
+              try{
+                /* jsPDF conserva aquí los píxeles del archivo original. */
+                pdf.addImage(
+                  imgDocumento,
+                  undefined,
+                  imgX,
+                  imgY,
+                  imgW,
+                  imgH,
+                  undefined,
+                  "SLOW"
+                );
+              }catch(errorImagen){
+                console.warn("No se pudo insertar imagen original; se usa respaldo de alta resolución:",errorImagen);
+                return html2canvas(pagina,{
+                  scale:3,
+                  useCORS:true,
+                  allowTaint:true,
+                  backgroundColor:"#ffffff",
+                  logging:false,
+                  width:anchoPx,
+                  height:altoPx,
+                  windowWidth:anchoPx,
+                  windowHeight:altoPx,
+                  scrollX:0,
+                  scrollY:0
+                }).then(function(canvas){
+                  const imagen=canvas.toDataURL("image/png");
+                  pdf.addImage(imagen,"PNG",0,0,anchoMM,altoMM,undefined,"SLOW");
+                });
+              }
+
+              pdf.setTextColor(90,90,90);
+              pdf.setFont("helvetica","normal");
+              pdf.setFontSize(7);
+              pdf.text("Expediente docente · NER 7 Benjamín Zeledón · Rancho Grande",margen,altoMM-4);
+              return Promise.resolve();
+            }
+
+            /* Portada, hoja de vida y cédula conservan su diseño actual. */
             return html2canvas(pagina,{
-              scale:2,
+              scale:3,
               useCORS:true,
               allowTaint:true,
               backgroundColor:"#ffffff",
