@@ -757,8 +757,8 @@ Cédula
 <input
 id="usuario"
 type="text"
-value="ELIAS"
-autocomplete="username"
+value=""
+autocomplete="off"
 placeholder="Ingrese número de cédula">
 
 <label>
@@ -5047,13 +5047,23 @@ function aplicarPermisos(){
   }
 }
 
-/* Inicio rápido: el cursor queda listo en Cédula al abrir la página. */
-window.addEventListener("load",function(){
+/* Inicio rápido: el login siempre abre en blanco y el cursor queda listo en Cédula. */
+function limpiarLoginInicial(){
   const usuario=document.getElementById("usuario");
+  const password=document.getElementById("password");
+  if(usuario) usuario.value="";
+  if(password) password.value="";
   if(usuario){
     usuario.focus();
-    try{ usuario.select(); }catch(e){}
   }
+}
+window.addEventListener("load",function(){
+  limpiarLoginInicial();
+  /* Algunos navegadores completan credenciales unos milisegundos después de cargar. */
+  setTimeout(limpiarLoginInicial,150);
+});
+window.addEventListener("pageshow",function(){
+  setTimeout(limpiarLoginInicial,50);
 });
 
 /* ENTER EN LOGIN: cédula + contraseña -> iniciar sesión */
@@ -5671,12 +5681,14 @@ h3{
 }
 
 .foto-cedula.vertical{
-  width:64mm;
-  height:150mm;
+  /* La foto fue capturada vertical: al girarla conserva proporción real de cédula (85.6 x 54 mm). */
+  width:54mm;
+  height:85.6mm;
   max-width:none;
   max-height:none;
   object-fit:contain;
   transform:rotate(-90deg);
+  transform-origin:center center;
 }
 
 .archivo-texto{
