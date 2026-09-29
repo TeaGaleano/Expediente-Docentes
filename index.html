@@ -4194,6 +4194,17 @@ async function abrirCamara(tipo){
 
   tipoCamara=tipo;
 
+  // Reinicia siempre los controles para permitir varias fotos seguidas.
+  const botonCamara=document.querySelector("#modalCamara .camara-controles button");
+  const mensajeCamara=document.getElementById("mensajeCamara");
+  if(botonCamara){
+    botonCamara.disabled=false;
+    botonCamara.innerHTML="📸 TOMAR FOTO";
+  }
+  if(mensajeCamara){
+    mensajeCamara.textContent="Iniciando cámara...";
+  }
+
   document
     .getElementById("modalCamara")
     .classList
@@ -4498,6 +4509,13 @@ async function tomarFoto(){
 ====================================================== */
 
 function cerrarCamara(){
+
+// Deja el botón listo para la próxima apertura de la cámara.
+const botonCamara=document.querySelector("#modalCamara .camara-controles button");
+if(botonCamara){
+  botonCamara.disabled=false;
+  botonCamara.innerHTML="📸 TOMAR FOTO";
+}
 
 if(streamCamara){
 
